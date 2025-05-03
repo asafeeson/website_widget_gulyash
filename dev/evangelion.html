@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="widget.css" />
+    <!-- <script src="widget.js"></script> -->
+    <title>Neon Genesis Evangelion</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        /* background-color: #1a1a1a; */
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        background-color: #4b0082;
+        padding: 20px;
+        text-align: center;
+      }
+
+      header h1 {
+        font-size: 2.5em;
+        color: #ff4500;
+        margin: 0;
+      }
+
+      main {
+        padding: 20px;
+      }
+
+      .content {
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .content h2 {
+        color: #ff4500;
+      }
+
+      footer {
+        background-color: #4b0082;
+        text-align: center;
+        padding: 10px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      footer p {
+        margin: 0;
+        color: #ffffff;
+      }
+
+      a {
+        color: #ff4500;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Neon Genesis Evangelion</h1>
+    </header>
+    <main>
+      <div class="content">
+        <h2>About the Series</h2>
+        <p>
+          <strong>Neon Genesis Evangelion</strong> is a Japanese anime series
+          created by Hideaki Anno. It first aired in 1995 and is considered one
+          of the most influential anime of all time. The story follows Shinji
+          Ikari, a teenager recruited by the mysterious organization NERV to
+          pilot a giant bio-machine mecha called an Evangelion to protect Earth
+          from mysterious beings known as Angels.
+        </p>
+        <h2>Key Themes</h2>
+        <ul>
+          <li>Psychological exploration of characters</li>
+          <li>Existentialism and philosophy</li>
+          <li>Human relationships and trauma</li>
+        </ul>
+        <h2>Learn More</h2>
+        <p>
+          Visit the
+          <a href="https://www.evangelion.co.jp/" target="_blank"
+            >official website</a
+          >
+          for more information.
+        </p>
+      </div>
+    </main>
+
+    <!-- modal floating button -->
+    <div id="modal-widget-floating-button" class="modal-widget-floating-button">
+      <button id="promo-floating-button" class="promo-floating-button">
+        🎁 Получить подарок
+      </button>
+    </div>
+
+    <!-- modal -->
+    <div id="modal-widget-overlay" class="modal-widget-overlay">
+      <div class="modal-widget-modal-window" id="modal-widget-modal-window">
+        <!-- title -->
+        <div class="modal-widget-close" id="modal-widget-close">
+          <div class="modal-widget-close-svg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              width="16"
+              height="16"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </div>
+        </div>
+        <div id="widget-content">
+          <!-- HERE SHOULD BE SLIDES CONTENT -->
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2023 Evangelion Fan Page</p>
+    </footer>
+
+  </body>
+</html>

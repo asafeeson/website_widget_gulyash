@@ -1,0 +1,263 @@
+<script>
+  var widgetData = {{ переменная_google_tag_manager }};
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var allowedRefferesData = ["google.com", "yandex.ru"]
+    var allowedReferrersData = [
+      {ref: "google.com", data: {{ переменная_google_tag_manager }} },
+      {ref: "yandex.ru", data: {{ переменная_google_tag_manager }} }
+    ];
+
+    var referrer = document.referrer;
+
+    if (referrer) {
+      var referrerHost = new URL(referrer).hostname;
+      if (allowedReferrers.includes(referrerHost)) {
+        var modalWindow = document.getElementById(
+          "modal-widget-modal-window"
+        );
+        var floatingButton = document.getElementById(
+          "modal-widget-floating-button"
+        );
+
+        if (modalWindow) {
+          modalWindow.style.display = "block";
+        }
+
+        if (floatingButton) {
+          floatingButton.style.display = "none";
+        }
+
+        var userHasPromocode = localStorage.getItem("userHasPromocode");
+        console.log('userHasPromocode', userHasPromocode);
+
+        if (userHasPromocode) {
+          var promoButton = document.getElementById(
+            "promo-floating-button"
+          );
+          if (promoButton) {
+            promocodeValue = localStorage.getItem("promocodeValue");
+            promoButton.textContent = "🎁 Промокод: " + promocodeValue;
+          }
+          var lastSlideKey = Object.keys(widgetData).pop();
+          createSlide(widgetData[lastSlideKey]);
+        } else {
+          createSlide(widgetData.slideOne);
+        }
+      }
+    }
+  });
+
+  document
+    .getElementById("modal-widget-close")
+    .addEventListener("click", closeModal);
+
+  document
+    .getElementById("modal-widget-floating-button")
+    .addEventListener("click", handleFoatingButtonClick);
+
+  document.addEventListener("click", function (event) {
+    var modalOverlay = document.getElementById("modal-widget-overlay");
+    var modalWindow = document.getElementById(
+      "modal-widget-modal-window"
+    );
+
+    if (
+      modalOverlay &&
+      modalWindow &&
+      getComputedStyle(modalOverlay).display === "block" &&
+      !modalWindow.contains(event.target) &&
+      !event.target.closest("#promo-floating-button") &&
+      !event.target.closest("#modal-widget-modal-window") &&
+      !event.target.closest(".modal-widget-button-group")
+    ) {
+      closeModal();
+    }
+  });
+
+  function createSlide(slideData) {
+    var widgetContent = document.createElement("div");
+    widgetContent.id = "widget-content";
+
+    var slide = document.createElement("div");
+    slide.id = "modal-widget-slide-start";
+    slide.style.animation = "slideInRight 0.5s ease-out";
+    var style = document.createElement("style");
+    style.textContent = "@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1;}}";
+    document.head.appendChild(style);
+    var title = document.createElement("h3");
+    title.textContent = slideData.title;
+    slide.appendChild(title);
+
+    var body = document.createElement("p");
+    body.innerHTML = slideData.body;
+    slide.appendChild(body);
+
+    if (slideData.promocode) {
+      var promoCodeElement = document.createElement("p");
+      promoCodeElement.className = "promocode-value";
+      promoCodeElement.id = "promocode-value";
+      promoCodeElement.textContent = slideData.promocode;
+      slide.appendChild(promoCodeElement);
+    } else if (slideData.image) {
+      var image = document.createElement("img");
+      image.className = "modal-widget-image";
+      image.style.width = "300px";
+      image.style.height = "300px";
+      image.src = slideData.image;
+      image.alt = "";
+      slide.appendChild(image);
+    }
+
+    if (slideData.caption) {
+      var caption = document.createElement("p");
+      caption.textContent = slideData.caption;
+      slide.appendChild(caption);
+    }
+
+    var buttonGroup = document.createElement("div");
+    buttonGroup.className = "modal-widget-button-group";
+
+    if (slideData && slideData.buttonPrimary) {
+      var primaryButton = document.createElement("button");
+      primaryButton.type = "button";
+      primaryButton.id = "modal-btn-goto-next-slide";
+      primaryButton.className = "modal-widget-button-primary";
+      primaryButton.textContent = slideData.buttonPrimary;
+      if (slideData && slideData.promocode) {
+        primaryButton.onclick = copyToClipboard;
+      } else {
+        primaryButton.onclick = handleNextSlideBtnClk;
+      }
+      if (slideData && slideData.buttonPrimaryAction === "close") {
+        primaryButton.onclick = closeModal;
+      }
+      primaryButton.setAttribute("data-next-slide", slideData.nextSlide);
+      buttonGroup.appendChild(primaryButton);
+    }
+
+    if (slideData && slideData.buttonSecondary) {
+      var secondaryButton = document.createElement("button");
+      secondaryButton.type = "button";
+      secondaryButton.id = "modal-btn-no-thank-you";
+      secondaryButton.className = "modal-widget-button-secondary";
+      secondaryButton.textContent = slideData.buttonSecondary;
+      secondaryButton.onclick = closeModal;
+      buttonGroup.appendChild(secondaryButton);
+    }
+
+    if (slideData && slideData.promocode) {
+      var promoButton = document.getElementById("promo-floating-button");
+      var primaryButton = document.getElementById(
+        "modal-btn-goto-next-slide"
+      );
+      if (promoButton) {
+        promoButton.textContent = "🎁 Промокод:" + slideData.promocode;
+      }
+      primaryButton.onclick = null;
+      primaryButton.onclick = copyToClipboard;
+
+      if (slideData.promocode) {
+        localStorage.setItem("userHasPromocode", true);
+        localStorage.setItem("promocodeValue", slideData.promocode);
+      }
+    }
+
+    slide.appendChild(buttonGroup);
+    widgetContent.appendChild(slide);
+
+    var modalWindow = document.getElementById("widget-content");
+    modalWindow.innerHTML = "";
+    modalWindow.appendChild(widgetContent);
+  }
+
+  function handleNextSlideBtnClk() {
+    var nextSlideKey = this.getAttribute("data-next-slide");
+    if (nextSlideKey && widgetData[nextSlideKey]) {
+      createSlide(widgetData[nextSlideKey]);
+    }
+  }
+
+  function closeModal() {
+    var modalWindow = document.getElementById("modal-widget-overlay");
+    var floatingButton = document.getElementById(
+      "modal-widget-floating-button"
+    );
+
+    if (modalWindow) {
+      modalWindow.style.display = "none";
+    }
+
+    if (floatingButton) {
+      floatingButton.style.display = "block";
+    }
+  }
+
+  function copyToClipboard() {
+    var promoCodeElement = document.getElementById("promocode-value");
+    if (promoCodeElement) {
+      var promoCode =
+          promoCodeElement.textContent || promoCodeElement.value;
+      navigator.clipboard
+        .writeText(promoCode)
+        .then(function () {
+        showToast("Промокод скопирован в буфер обмена!");
+      })
+        .catch(function (err) {
+        console.error("Ошибка при копировании промокода: ", err);
+      });
+    } else {
+      console.error("Элемент с id='promocode-value' не найден.");
+    }
+    var nextSlideKey = this.getAttribute("data-next-slide");
+    console.log(nextSlideKey);
+    createSlide(widgetData[nextSlideKey]);
+  }
+
+  function showToast(message) {
+    var toast = document.createElement("div");
+    toast.textContent = message;
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.right = "20px";
+    toast.style.backgroundColor = "#4caf50";
+    toast.style.color = "#ffffff";
+    toast.style.padding = "10px 20px";
+    toast.style.borderRadius = "5px";
+    toast.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+    toast.style.zIndex = "1000";
+    document.body.appendChild(toast);
+
+    setTimeout(function () {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 0.5s";
+      setTimeout(function () {
+        document.body.removeChild(toast);
+      }, 500);
+    }, 3000);
+  }
+
+  function handleFoatingButtonClick() {
+    var modalWindow = document.getElementById("modal-widget-overlay");
+    var floatingButton = document.getElementById(
+      "modal-widget-floating-button"
+    );
+
+    if (modalWindow) {
+      modalWindow.style.display = "block";
+    }
+
+    if (floatingButton) {
+      floatingButton.style.display = "none";
+    }
+
+    var userHasPromocode = localStorage.getItem("userHasPromocode");
+    console.log('userHasPromocode', userHasPromocode);
+    if (userHasPromocode) {
+      var lastSlideKey = Object.keys(widgetData).pop();
+      createSlide(widgetData[lastSlideKey]);
+    } else {
+      createSlide(widgetData.slideOne);
+    }
+  }
+</script>
