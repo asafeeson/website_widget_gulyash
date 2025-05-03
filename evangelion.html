@@ -331,6 +331,10 @@
           }
           primaryButton.onclick = null; // Remove the current event
           primaryButton.onclick = copyToClipboard; // Add the new onclick event
+
+          if (slideData.promocode) {
+            localStorage.setItem("userHasPromocode", true);
+          }
         }
 
         slide.appendChild(buttonGroup);
@@ -425,7 +429,14 @@
           floatingButton.style.display = "none"; // Hide the floating button
         }
 
-        createSlide(widgetData.slideOne); // Initialize the first slide
+        const userHasPromocode = localStorage.getItem("userHasPromocode");
+
+        if (userHasPromocode) {
+          const lastSlideKey = Object.keys(widgetData).pop(); // Get the last slide key
+          createSlide(widgetData[lastSlideKey]); // Show the last slide dynamically
+        } else {
+          createSlide(widgetData.slideOne); // Initialize the first slide
+        }
       }
     </script>
   </body>
