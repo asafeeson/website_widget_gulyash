@@ -266,7 +266,9 @@
           modalWindow &&
           getComputedStyle(modalOverlay).display === "block" &&
           !modalWindow.contains(event.target) &&
-          !event.target.closest("#promo-floating-button")
+          !event.target.closest("#promo-floating-button") &&
+          !event.target.closest("#modal-widget-modal-window") &&
+          !event.target.closest(".modal-widget-button-group")
         ) {
           closeModal();
         }
