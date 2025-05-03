@@ -255,6 +255,23 @@
         .getElementById("modal-widget-floating-button")
         .addEventListener("click", handleFoatingButtonClick);
 
+      document.addEventListener("click", function (event) {
+        const modalOverlay = document.getElementById("modal-widget-overlay");
+        const modalWindow = document.getElementById(
+          "modal-widget-modal-window"
+        );
+
+        if (
+          modalOverlay &&
+          modalWindow &&
+          getComputedStyle(modalOverlay).display === "block" &&
+          !modalWindow.contains(event.target) &&
+          !event.target.closest("#promo-floating-button")
+        ) {
+          closeModal();
+        }
+      });
+
       function createSlide(slideData) {
         const widgetContent = document.createElement("div");
         widgetContent.id = "widget-content";
@@ -371,9 +388,7 @@
       }
 
       function closeModal() {
-        const modalWindow = document.getElementById(
-          "modal-widget-overlay"
-        );
+        const modalWindow = document.getElementById("modal-widget-overlay");
         const floatingButton = document.getElementById(
           "modal-widget-floating-button"
         );
@@ -431,9 +446,7 @@
       }
 
       function handleFoatingButtonClick() {
-        const modalWindow = document.getElementById(
-          "modal-widget-overlay"
-        );
+        const modalWindow = document.getElementById("modal-widget-overlay");
         const floatingButton = document.getElementById(
           "modal-widget-floating-button"
         );
