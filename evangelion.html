@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="widget.css" />
+    <!-- <script src="widget.js"></script> -->
+    <title>Neon Genesis Evangelion</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #1a1a1a;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        background-color: #4b0082;
+        padding: 20px;
+        text-align: center;
+      }
+
+      header h1 {
+        font-size: 2.5em;
+        color: #ff4500;
+        margin: 0;
+      }
+
+      main {
+        padding: 20px;
+      }
+
+      .content {
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .content h2 {
+        color: #ff4500;
+      }
+
+      footer {
+        background-color: #4b0082;
+        text-align: center;
+        padding: 10px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      footer p {
+        margin: 0;
+        color: #ffffff;
+      }
+
+      a {
+        color: #ff4500;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Neon Genesis Evangelion</h1>
+    </header>
+    <main>
+      <div class="content">
+        <h2>About the Series</h2>
+        <p>
+          <strong>Neon Genesis Evangelion</strong> is a Japanese anime series
+          created by Hideaki Anno. It first aired in 1995 and is considered one
+          of the most influential anime of all time. The story follows Shinji
+          Ikari, a teenager recruited by the mysterious organization NERV to
+          pilot a giant bio-machine mecha called an Evangelion to protect Earth
+          from mysterious beings known as Angels.
+        </p>
+        <h2>Key Themes</h2>
+        <ul>
+          <li>Psychological exploration of characters</li>
+          <li>Existentialism and philosophy</li>
+          <li>Human relationships and trauma</li>
+        </ul>
+        <h2>Learn More</h2>
+        <p>
+          Visit the
+          <a href="https://www.evangelion.co.jp/" target="_blank"
+            >official website</a
+          >
+          for more information.
+        </p>
+      </div>
+    </main>
+
+    <!-- modal floating button -->
+    <div id="modal-widget-floating-button" class="modal-widget-floating-button">
+      <button id="promo-floating-button" class="promo-floating-button">
+        🎁 Получить подарок
+      </button>
+    </div>
+
+    <!-- modal -->
+    <div class="modal-widget-modal-window" id="modal-widget-modal-window">
+      <!-- title -->
+      <div class="modal-widget-close" id="modal-widget-close">
+        <div class="modal-widget-close-svg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="16"
+            height="16"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+      </div>
+      <div id="widget-content">
+        <!-- HERE SHOULD BE SLIDES CONTENT -->
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2023 Evangelion Fan Page</p>
+    </footer>
+    <script>
+      const widgetData = {
+        referrer: "google.com",
+        slideOne: {
+          title: "Кажется, Вы у нас впервые!",
+          body: "Хотим рассказать 3 факта о себе и подарить нежную и красивую <strong>Филадельфию от Шефа</strong>!",
+          image:
+            "https://kwork.com/files/uploaded/dc/98/42/c73ffcb581/IMG_2377.jpeg",
+          caption: "Филадельфия с авокадо 8шт. 250 г",
+          buttonPrimary: "Да, давайте",
+          buttonSecondary: "Спасибо, не нужно",
+          nextSlide: "slideTwo",
+        },
+        slideTwo: {
+          title: "Контора вкуса - это триумф российской школы поваров…",
+          body: "Для Вас готовим мы - повара с профильным образованием по направлению поварской деятельности.",
+          image:
+            "https://kwork.com/files/uploaded/d7/2c/38/110c80aeea/IMG_2042.png",
+          caption: "",
+          buttonPrimary: "Далее →",
+          buttonSecondary: "",
+          nextSlide: "slideThree",
+        },
+        slideThree: {
+          title: "Контора вкуса - это пунктуальная доставка…",
+          body: "Доставим в пределах обещанного времени!",
+          image:
+            "https://kwork.com/files/uploaded/d7/2c/38/110c80aeea/IMG_2042.png",
+          caption: "",
+          buttonPrimary: "Далее →",
+          buttonSecondary: "",
+          nextSlide: "slideFour",
+        },
+        slideFour: {
+          title: "Контора вкуса - это сочный кэшбэк…",
+          body: "Оплачивайте бонусными баллами до 99% стоимости заказа!",
+          image:
+            "https://kwork.com/files/uploaded/44/d4/96/c12e5452cd/IMG_2032.png",
+          caption: "",
+          buttonPrimary: "Получить промокод",
+          buttonSecondary: "",
+          nextSlide: "slideFive",
+        },
+        slideFive: {
+          title: "Ваш подарок!",
+          body: "",
+          image:
+            "https://kwork.com/files/uploaded/dc/98/42/c73ffcb581/IMG_2377.jpeg",
+          caption:
+            "Введите промокод и получите нежный, но красивый ролл Филадельфия с авокадо в подарок при первом заказе от 1390 р.",
+          promocode: "ФИЛА",
+          buttonPrimary: "Скопировать промокод",
+          buttonSecondary: "",
+          nextSlide: "slideSix",
+        },
+        slideSix: {
+          title: "Как получить подарок",
+          body: "Добавьте блюда в корзину и введите промокод в поле. Подарок добавится к заказу автоматически за 0р.",
+          image: "",
+          caption: "Промокод действует 24 часа.",
+          buttonPrimary: "Перейти к выбору блюд →",
+          buttonPrimaryAction: "close",
+          nextSlide: "",
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const allowedReferrers = [
+          "google.com",
+          "yandex.ru",
+          "bing.com",
+          "127.0.0.1",
+        ];
+        const referrer = document.referrer;
+
+        if (referrer) {
+          const referrerHost = new URL(referrer).hostname;
+          if (allowedReferrers.includes(referrerHost)) {
+            const modalWindow = document.getElementById(
+              "modal-widget-modal-window"
+            );
+            const floatingButton = document.getElementById(
+              "modal-widget-floating-button"
+            );
+
+            if (modalWindow) {
+              modalWindow.style.display = "block"; // Show the modal window
+            }
+
+            if (floatingButton) {
+              floatingButton.style.display = "none"; // Hide the floating button
+            }
+
+            createSlide(widgetData.slideOne); // Initialize the first slide
+          }
+        }
+      });
+
+      document
+        .getElementById("modal-widget-close")
+        .addEventListener("click", closeModal);
+
+      document
+        .getElementById("modal-widget-floating-button")
+        .addEventListener("click", handleFoatingButtonClick);
+
+      function createSlide(slideData) {
+        const widgetContent = document.createElement("div");
+        widgetContent.id = "widget-content";
+
+        const slide = document.createElement("div");
+        slide.id = "modal-widget-slide-start";
+        slide.style.animation = "slideInRight 0.5s ease-out"; // Add animation class
+        const style = document.createElement("style");
+        style.textContent = `
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+        const title = document.createElement("h3");
+        title.textContent = slideData.title;
+        slide.appendChild(title);
+
+        const body = document.createElement("p");
+        body.innerHTML = slideData.body;
+        slide.appendChild(body);
+
+        if (slideData.promocode) {
+          const promoCodeElement = document.createElement("p");
+          promoCodeElement.className = "promocode-value";
+          promoCodeElement.id = "promocode-value";
+          promoCodeElement.textContent = slideData.promocode;
+          slide.appendChild(promoCodeElement);
+        } else if (slideData.image) {
+          const image = document.createElement("img");
+          image.className = "modal-widget-image";
+          image.style.width = "300px";
+          image.style.height = "300px";
+          image.src = slideData.image;
+          image.alt = "";
+          slide.appendChild(image);
+        }
+
+        if (slideData.caption) {
+          const caption = document.createElement("p");
+          caption.textContent = slideData.caption;
+          slide.appendChild(caption);
+        }
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "modal-widget-button-group";
+
+        if (slideData?.buttonPrimary) {
+          const primaryButton = document.createElement("button");
+          primaryButton.type = "button";
+          primaryButton.id = "modal-btn-goto-next-slide";
+          primaryButton.className = "modal-widget-button-primary";
+          primaryButton.textContent = slideData.buttonPrimary;
+          if (slideData?.promocode) {
+            primaryButton.onclick = copyToClipboard;
+          } else {
+            primaryButton.onclick = handleNextSlideBtnClk;
+          }
+          if (slideData?.buttonPrimaryAction === "close") {
+            primaryButton.onclick = closeModal;
+          }
+          primaryButton.setAttribute("data-next-slide", slideData.nextSlide);
+          buttonGroup.appendChild(primaryButton);
+        }
+
+        if (slideData?.buttonSecondary) {
+          const secondaryButton = document.createElement("button");
+          secondaryButton.type = "button";
+          secondaryButton.id = "modal-btn-no-thank-you";
+          secondaryButton.className = "modal-widget-button-secondary";
+          secondaryButton.textContent = slideData.buttonSecondary;
+          secondaryButton.onclick = closeModal;
+          buttonGroup.appendChild(secondaryButton);
+        }
+
+        if (slideData?.promocode) {
+          const promoButton = document.getElementById("promo-floating-button");
+          const primaryButton = document.getElementById(
+            "modal-btn-goto-next-slide"
+          );
+          if (promoButton) {
+            promoButton.textContent = `🎁 Промокод: ${slideData.promocode}`;
+          }
+          primaryButton.onclick = null; // Remove the current event
+          primaryButton.onclick = copyToClipboard; // Add the new onclick event
+        }
+
+        slide.appendChild(buttonGroup);
+        widgetContent.appendChild(slide);
+
+        const modalWindow = document.getElementById("widget-content");
+        modalWindow.innerHTML = ""; // Clear existing content
+        modalWindow.appendChild(widgetContent);
+      }
+
+      function handleNextSlideBtnClk() {
+        const nextSlideKey = this.getAttribute("data-next-slide");
+        if (nextSlideKey && widgetData[nextSlideKey]) {
+          createSlide(widgetData[nextSlideKey]);
+        }
+      }
+
+      function closeModal() {
+        const modalWindow = document.getElementById(
+          "modal-widget-modal-window"
+        );
+        console.log(modalWindow);
+        const floatingButton = document.getElementById(
+          "modal-widget-floating-button"
+        );
+
+        if (modalWindow) {
+          modalWindow.style.display = "none"; // Hide the modal window
+        }
+
+        if (floatingButton) {
+          floatingButton.style.display = "block"; // Make the floating button visible
+        }
+      }
+      function copyToClipboard() {
+        const promoCodeElement = document.getElementById("promocode-value");
+        if (promoCodeElement) {
+          const promoCode =
+            promoCodeElement.textContent || promoCodeElement.value;
+          navigator.clipboard
+            .writeText(promoCode)
+            .then(() => {
+              showToast("Промокод скопирован в буфер обмена!");
+            })
+            .catch((err) => {
+              console.error("Ошибка при копировании промокода: ", err);
+            });
+        } else {
+          console.error("Элемент с id='promocode-value' не найден.");
+        }
+        const nextSlideKey = this.getAttribute("data-next-slide");
+        console.log(nextSlideKey);
+        createSlide(widgetData[nextSlideKey]);
+      }
+
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.textContent = message;
+        toast.style.position = "fixed";
+        toast.style.bottom = "20px";
+        toast.style.right = "20px";
+        toast.style.backgroundColor = "#4caf50";
+        toast.style.color = "#ffffff";
+        toast.style.padding = "10px 20px";
+        toast.style.borderRadius = "5px";
+        toast.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+        toast.style.zIndex = "1000";
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          toast.style.transition = "opacity 0.5s";
+          setTimeout(() => {
+            document.body.removeChild(toast);
+          }, 500);
+        }, 3000);
+      }
+
+      function handleFoatingButtonClick() {
+        const modalWindow = document.getElementById(
+          "modal-widget-modal-window"
+        );
+        const floatingButton = document.getElementById(
+          "modal-widget-floating-button"
+        );
+
+        if (modalWindow) {
+          modalWindow.style.display = "block"; // Show the modal window
+        }
+
+        if (floatingButton) {
+          floatingButton.style.display = "none"; // Hide the floating button
+        }
+
+        createSlide(widgetData.slideOne); // Initialize the first slide
+      }
+    </script>
+  </body>
+</html>

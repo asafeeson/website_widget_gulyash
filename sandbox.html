@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Тестирование виджета модального окна</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+      }
+      h1 {
+        color: #4285f4;
+      }
+      .content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      #test-controls {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+      }
+      button {
+        padding: 8px 12px;
+        margin-right: 10px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #3367d6;
+      }
+      select {
+        padding: 8px;
+        margin-right: 10px;
+      }
+      input {
+        padding: 8px;
+        margin-right: 10px;
+        width: 250px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <h1>Тестовая страница для виджета модального окна</h1>
+      <p>
+        Эта страница позволяет тестировать виджет модального окна без
+        необходимости настройки Google Tag Manager.
+      </p>
+
+      <div id="test-controls">
+        <h3>Панель управления тестированием</h3>
+
+        <div style="margin-bottom: 15px">
+          <label for="referrer-select">Имитация источника перехода:</label>
+          <select id="referrer-select">
+            <option value="direct">Прямой переход</option>
+            <option value="google.com">Google</option>
+            <option value="facebook.com">Facebook</option>
+            <option value="instagram.com">Instagram</option>
+            <option value="yandex.ru">Яндекс</option>
+            <option value="custom">Другой (указать)</option>
+          </select>
+          <input
+            type="text"
+            id="custom-referrer"
+            placeholder="Введите домен источника"
+            style="display: none"
+          />
+        </div>
+
+        <div style="margin-bottom: 15px">
+          <button id="load-widget">Загрузить виджет</button>
+          <button id="reset-widget">Сбросить виджет</button>
+          <button id="toggle-modal">Открыть/закрыть модальное окно</button>
+        </div>
+
+        <div style="margin-bottom: 15px">
+          <label for="config-type">Источник конфигурации:</label>
+          <select id="config-type">
+            <option value="inline">Встроенная конфигурация</option>
+            <option value="local">Локальный JSON-файл</option>
+            <option value="api">Имитация API</option>
+          </select>
+          <input
+            type="file"
+            id="config-file"
+            accept=".json"
+            style="display: none"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Имитация объекта с конфигурацией виджета (как в JavaScript-переменной GTM)
+      const widgetConfigMock = {
+        default: {
+          title: "Добро пожаловать на наш сайт!",
+          text: "Мы рады видеть вас здесь. Узнайте больше о наших услугах.",
+          imageUrl: "https://via.placeholder.com/300x200",
+          buttonPrimary: {
+            text: "Узнать больше",
+            url: "/about",
+          },
+          buttonSecondary: {
+            text: "Закрыть",
+            action: "close",
+          },
+        },
+        "google.com": {
+          title: "Вы пришли из Google!",
+          text: "Мы предлагаем специальные условия для пользователей, которые нашли нас через поиск.",
+          imageUrl: "https://via.placeholder.com/300x200",
+          buttonPrimary: {
+            text: "Получить скидку",
+            url: "/special-offer",
+          },
+          buttonSecondary: {
+            text: "Закрыть",
+            action: "close",
+          },
+        },
+        "facebook.com": {
+          title: "Привет из Facebook!",
+          text: "Спасибо, что перешли по ссылке из социальной сети. У нас есть для вас особое предложение.",
+          imageUrl: "https://via.placeholder.com/300x200",
+          buttonPrimary: {
+            text: "Социальная акция",
+            url: "/social-promo",
+          },
+          buttonSecondary: {
+            text: "Закрыть",
+            action: "close",
+          },
+        },
+        "yandex.ru": {
+          title: "Вы пришли из Яндекса!",
+          text: "Мы предлагаем специальные условия для пользователей из России.",
+          imageUrl: "https://via.placeholder.com/300x200",
+          buttonPrimary: {
+            text: "Российские предложения",
+            url: "/ru-special",
+          },
+          buttonSecondary: {
+            text: "Закрыть",
+            action: "close",
+          },
+        },
+      };
+
+      // Загрузка конфигурации из локального JSON-файла
+      function loadConfigFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            try {
+              const config = JSON.parse(event.target.result);
+              resolve(config);
+            } catch (e) {
+              reject(new Error("Ошибка разбора JSON-файла"));
+            }
+          };
+          reader.onerror = function () {
+            reject(new Error("Ошибка чтения файла"));
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      // Имитация загрузки конфигурации через API
+      function mockApiConfig(referrer) {
+        return new Promise((resolve) => {
+          // Имитируем задержку API
+          setTimeout(() => {
+            let config;
+            // Проверяем, есть ли специфическая конфигурация для этого источника
+            if (widgetConfigMock[referrer]) {
+              config = widgetConfigMock[referrer];
+            } else {
+              config = widgetConfigMock["default"];
+            }
+            resolve(config);
+          }, 500);
+        });
+      }
+
+      // Обработчики для элементов управления
+      document.addEventListener("DOMContentLoaded", function () {
+        const referrerSelect = document.getElementById("referrer-select");
+        const customReferrer = document.getElementById("custom-referrer");
+        const loadWidgetBtn = document.getElementById("load-widget");
+        const resetWidgetBtn = document.getElementById("reset-widget");
+        const toggleModalBtn = document.getElementById("toggle-modal");
+        const configType = document.getElementById("config-type");
+        const configFile = document.getElementById("config-file");
+
+        // Показывать/скрывать поле для пользовательского источника
+        referrerSelect.addEventListener("change", function () {
+          if (this.value === "custom") {
+            customReferrer.style.display = "inline-block";
+          } else {
+            customReferrer.style.display = "none";
+          }
+        });
+
+        // Показывать/скрывать поле для загрузки файла
+        configType.addEventListener("change", function () {
+          if (this.value === "local") {
+            configFile.style.display = "inline-block";
+          } else {
+            configFile.style.display = "none";
+          }
+        });
+
+        // Загрузка виджета
+        loadWidgetBtn.addEventListener("click", async function () {
+          // Получаем имитируемый источник перехода
+          let referrer;
+          if (referrerSelect.value === "custom") {
+            referrer = customReferrer.value.trim();
+          } else {
+            referrer = referrerSelect.value;
+          }
+
+          // Устанавливаем фиктивный referrer для тестирования
+          Object.defineProperty(document, "referrer", {
+            get: function () {
+              return `https://${referrer}/some-page`;
+            },
+            configurable: true,
+          });
+
+          // Определяем способ получения конфигурации
+          let widgetConfig;
+          if (configType.value === "local" && configFile.files.length > 0) {
+            try {
+              widgetConfig = await loadConfigFromFile(configFile.files[0]);
+            } catch (error) {
+              alert("Ошибка загрузки JSON: " + error.message);
+              return;
+            }
+          } else if (configType.value === "api") {
+            widgetConfig = await mockApiConfig(referrer);
+          } else {
+            widgetConfig = widgetConfigMock;
+          }
+
+          // Очищаем предыдущую версию виджета, если есть
+          if (window.modalWidget) {
+            try {
+              resetWidget();
+            } catch (e) {
+              // Игнорируем ошибки при очистке
+            }
+          }
+
+          // Объявляем функцию для доступа из кода виджета
+          window.getWidgetTestConfig = function () {
+            return widgetConfig;
+          };
+
+          // Загружаем код виджета
+          const script = document.createElement("script");
+          script.id = "modal-widget-script";
+          script.textContent = `
+                    (function() {
+                        // Получаем конфигурацию из нашей тестовой среды
+                        const widgetConfig = window.getWidgetTestConfig();
+                        
+                        // Остальная часть кода виджета
+                        // Вставьте здесь код виджета, заменив определение widgetConfig на получение из getWidgetTestConfig()
+                        
+                        // *** НАЧАЛО КОДА ВИДЖЕТА ***
+                        
+                        // Здесь должен быть весь код виджета, скопированный из артефакта, 
+                        // кроме определения widgetConfig в начале
+
+                        // Определение источника перехода
+                        function getReferrerSource() {
+                            const referrer = document.referrer;
+                            if (!referrer) return 'direct';
+                            
+                            const referrerDomain = new URL(referrer).hostname;
+                            
+                            // Проверяем источник перехода
+                            for (const source in widgetConfig) {
+                                if (source !== 'default' && referrerDomain.includes(source)) {
+                                    return source;
+                                }
+                            }
+                            
+                            return 'default';
+                        }
+
+                        // Получаем конфигурацию на основе источника
+                        const source = getReferrerSource();
+                        const config = widgetConfig[source] || widgetConfig['default'];
+
+                        // Создаем стили для виджета
+                        function createStyles() {
+                            const styleElement = document.createElement('style');
+                            styleElement.textContent = \`
+                                .modal-widget-container {
+                                    position: absolute;
+                                    bottom: 20px;
+                                    right: 20px;
+                                    z-index: 9999;
+                                    font-family: Arial, sans-serif;
+                                }
+                                
+                                .modal-widget-button {
+                                    width: 60px;
+                                    height: 60px;
+                                    border-radius: 50%;
+                                    background-color: #4285f4;
+                                    color: white;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                                    transition: all 0.3s ease;
+                                }
+                                
+                                .modal-widget-button:hover {
+                                    transform: scale(1.05);
+                                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                                }
+                                
+                                .modal-widget-button svg {
+                                    width: 30px;
+                                    height: 30px;
+                                }
+                                
+                                .modal-widget-overlay {
+                                    display: none;
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    background-color: rgba(0, 0, 0, 0.5);
+                                    z-index: 9998;
+                                }
+                                
+                                .modal-widget-modal {
+                                    display: none;
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    translate: -50% -50%;
+                                    width: 320px;
+                                    background-color: white;
+                                    border-radius: 8px;
+                                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                                    z-index: 10000;
+                                    overflow: hidden;
+                                    animation: modalFadeIn 0.3s ease;
+                                }
+                                
+                                @keyframes modalFadeIn {
+                                    from { opacity: 0; transform: translateY(20px); }
+                                    to { opacity: 1; transform: translateY(0); }
+                                }
+                                
+                                .modal-widget-header {
+                                    padding: 15px;
+                                    background-color: #4285f4;
+                                    color: white;
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                }
+                                
+                                .modal-widget-header h3 {
+                                    margin: 0;
+                                    font-size: 18px;
+                                }
+                                
+                                .modal-widget-close {
+                                    cursor: pointer;
+                                    padding: 5px;
+                                }
+                                
+                                .modal-widget-content {
+                                    padding: 15px;
+                                }
+                                
+                                .modal-widget-image {
+                                    width: 100%;
+                                    height: auto;
+                                    margin-bottom: 15px;
+                                    border-radius: 4px;
+                                }
+                                
+                                .modal-widget-text {
+                                    margin-bottom: 15px;
+                                    line-height: 1.5;
+                                }
+                                
+                                .modal-widget-buttons {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-top: 15px;
+                                }
+                                
+                                .modal-widget-button-primary {
+                                    padding: 10px 15px;
+                                    background-color: #4285f4;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-weight: bold;
+                                    flex-grow: 1;
+                                    margin-right: 10px;
+                                    text-align: center;
+                                    text-decoration: none;
+                                }
+                                
+                                .modal-widget-button-secondary {
+                                    padding: 10px 15px;
+                                    background-color: #f1f1f1;
+                                    color: #333;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    flex-grow: 1;
+                                    text-align: center;
+                                    text-decoration: none;
+                                }
+                            \`;
+                            document.head.appendChild(styleElement);
+                        }
+
+                        // Создаем структуру виджета
+                        function createWidgetDOM() {
+                            // Создаем контейнер для виджета
+                            const container = document.createElement('div');
+                            container.className = 'modal-widget-container';
+                            
+                            // Создаем кнопку для открытия/закрытия виджета
+                            const button = document.createElement('div');
+                            button.className = 'modal-widget-button';
+                            button.innerHTML = \`
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                            \`;
+                            
+                            // Создаем наложение (оверлей) для затемнения фона
+                            const overlay = document.createElement('div');
+                            overlay.className = 'modal-widget-overlay';
+                            
+                            // Создаем модальное окно
+                            const modal = document.createElement('div');
+                            modal.className = 'modal-widget-modal';
+                            
+                            // Заголовок модального окна
+                            const header = document.createElement('div');
+                            header.className = 'modal-widget-header';
+                            header.innerHTML = \`
+                                <h3>\${config.title}</h3>
+                                <div class="modal-widget-close">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </div>
+                            \`;
+                            
+                            // Контент модального окна
+                            const content = document.createElement('div');
+                            content.className = 'modal-widget-content';
+                            
+                            // Изображение
+                            const image = document.createElement('img');
+                            image.className = 'modal-widget-image';
+                            image.src = config.imageUrl;
+                            image.alt = config.title;
+                            
+                            // Текст
+                            const text = document.createElement('div');
+                            text.className = 'modal-widget-text';
+                            text.textContent = config.text;
+                            
+                            // Кнопки
+                            const buttons = document.createElement('div');
+                            buttons.className = 'modal-widget-buttons';
+                            
+                            // Основная кнопка
+                            const buttonPrimary = document.createElement('a');
+                            buttonPrimary.className = 'modal-widget-button-primary';
+                            buttonPrimary.textContent = config.buttonPrimary.text;
+                            buttonPrimary.href = config.buttonPrimary.url;
+                            
+                            // Вторичная кнопка
+                            const buttonSecondary = document.createElement('a');
+                            buttonSecondary.className = 'modal-widget-button-secondary';
+                            buttonSecondary.textContent = config.buttonSecondary.text;
+                            buttonSecondary.href = '#';
+                            
+                            // Собираем структуру модального окна
+                            buttons.appendChild(buttonPrimary);
+                            buttons.appendChild(buttonSecondary);
+                            
+                            content.appendChild(image);
+                            content.appendChild(text);
+                            content.appendChild(buttons);
+                            
+                            modal.appendChild(header);
+                            modal.appendChild(content);
+                            
+                            // Добавляем элементы на страницу
+                            container.appendChild(button);
+                            document.body.appendChild(container);
+                            document.body.appendChild(overlay);
+                            document.body.appendChild(modal);
+                            
+                            return {
+                                container,
+                                button,
+                                modal,
+                                overlay,
+                                close: header.querySelector('.modal-widget-close'),
+                                buttonSecondary
+                            };
+                        }
+
+                        // Обработчики событий
+                        function setupEventListeners(elements) {
+                            // Открытие модального окна при клике на кнопку
+                            elements.button.addEventListener('click', () => {
+                                elements.modal.style.display = 'block';
+                                elements.overlay.style.display = 'block';
+                                
+                                // Меняем иконку на кнопке
+                                elements.button.innerHTML = \`
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                \`;
+                            });
+                            
+                            // Функция для закрытия модального окна
+                            const closeModal = () => {
+                                elements.modal.style.display = 'none';
+                                elements.overlay.style.display = 'none';
+                                
+                                // Возвращаем иконку на кнопке
+                                elements.button.innerHTML = \`
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                \`;
+                            };
+                            
+                            // Закрытие при клике на крестик
+                            elements.close.addEventListener('click', closeModal);
+                            
+                            // Закрытие при клике на оверлей
+                            elements.overlay.addEventListener('click', closeModal);
+                            
+                            // Обработка клика на вторичную кнопку (если действие закрытия)
+                            if (config.buttonSecondary.action === 'close') {
+                                elements.buttonSecondary.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    closeModal();
+                                });
+                            }
+                        }
+
+                        // Инициализация виджета
+                        function initWidget() {
+                            // Создаем стили
+                            createStyles();
+                            
+                            // Создаем DOM-элементы
+                            const elements = createWidgetDOM();
+                            
+                            // Настраиваем обработчики событий
+                            setupEventListeners(elements);
+                            
+                            // Возвращаем публичный API виджета
+                            return {
+                                open: () => {
+                                    elements.modal.style.display = 'block';
+                                    elements.overlay.style.display = 'block';
+                                },
+                                close: () => {
+                                    elements.modal.style.display = 'none';
+                                    elements.overlay.style.display = 'none';
+                                },
+                                update: (newConfig) => {
+                                    // Логика обновления конфигурации виджета
+                                }
+                            };
+                        }
+
+                        // Запускаем виджет и сохраняем API для возможного использования
+                        window.modalWidget = initWidget();
+                        
+                        // *** КОНЕЦ КОДА ВИДЖЕТА ***
+                    })();
+                `;
+          document.head.appendChild(script);
+
+          alert(`Виджет загружен с имитацией источника: ${referrer}`);
+        });
+
+        // Сброс виджета
+        resetWidgetBtn.addEventListener("click", resetWidget);
+
+        // Принудительное открытие/закрытие модального окна
+        toggleModalBtn.addEventListener("click", function () {
+          if (window.modalWidget) {
+            const modal = document.querySelector(".modal-widget-modal");
+            if (modal && window.getComputedStyle(modal).display === "none") {
+              window.modalWidget.open();
+            } else {
+              window.modalWidget.close();
+            }
+          } else {
+            alert("Сначала загрузите виджет");
+          }
+        });
+      });
+
+      // Функция для удаления виджета со страницы
+      function resetWidget() {
+        // Удаляем скрипт
+        const script = document.getElementById("modal-widget-script");
+        if (script) {
+          script.remove();
+        }
+
+        // Удаляем стили виджета
+        const styles = document.querySelectorAll("style");
+        styles.forEach((style) => {
+          if (style.textContent.includes("modal-widget")) {
+            style.remove();
+          }
+        });
+
+        // Удаляем элементы виджета с DOM
+        document
+          .querySelectorAll(
+            ".modal-widget-container, .modal-widget-modal, .modal-widget-overlay"
+          )
+          .forEach((el) => el.remove());
+
+        // Сбрасываем объект модального окна
+        window.modalWidget = null;
+
+        alert("Виджет был сброшен");
+      }
+    </script>
+  </body>
+</html>
