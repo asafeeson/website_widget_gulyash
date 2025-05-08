@@ -1,34 +1,36 @@
-<!-- modal floating button -->
-<div id="modal-widget-floating-button" class="modal-widget-floating-button">
-  <button id="promo-floating-button" class="promo-floating-button">
-    🎁 Получить подарок
-  </button>
-</div>
+<script>
+  // Создаем HTML-элементы
+  (function() {
+    var referrerData = {{Referrer}};
+    // если нет источника перехода или источник не совпадает с разрешенными,
+    // то модальное окно не создается
+    if (!referrerData) {
+      return
+    } else {
+      var allowedHosts = {{WidgetAllowedHosts}};
+      var refHostname = new URL(referrerData).hostname;
+      if (!allowedHosts.includes(refHostname)) return;
+    }
 
-<!-- modal -->
-<div id="modal-widget-overlay" class="modal-widget-overlay">
-  <div class="modal-widget-modal-window" id="modal-widget-modal-window">
-    <!-- title -->
-    <div class="modal-widget-close" id="modal-widget-close">
-      <div class="modal-widget-close-svg">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          width="16"
-          height="16"
-        >
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </div>
-    </div>
-    <div id="widget-content">
-      <!-- HERE SHOULD BE SLIDES CONTENT -->
-    </div>
-  </div>
-</div>
+    // Создаем кнопку
+    var floatingButton = document.createElement('div');
+    floatingButton.id = 'modal-widget-floating-button';
+    floatingButton.className = 'modal-widget-floating-button';
+    floatingButton.innerHTML = '<button id="promo-floating-button" class="promo-floating-button">🎁Получить подарок</button>';
+
+    // Создаем модальное окно
+    var modalOverlay = document.createElement('div');
+    modalOverlay.id = 'modal-widget-overlay';
+    modalOverlay.className = 'modal-widget-overlay';
+    modalOverlay.style.display = 'none';
+    modalOverlay.innerHTML = '<div class="modal-widget-modal-window" id="modal-widget-modal-window">' +
+      '<div class="modal-widget-close" id="modal-widget-close">' +
+      '<div class="modal-widget-close-svg">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+      '</div> </div> <div id="widget-content"><!-- HERE SHOULD BE SLIDES CONTENT --></div> </div>';
+
+    // Добавляем элементы в конец body документа
+    document.body.appendChild(floatingButton);
+    document.body.appendChild(modalOverlay);
+  })();
+</script>

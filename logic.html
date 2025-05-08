@@ -1,0 +1,348 @@
+<script>
+  // Глобальные данные из переменной GTM
+  var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
+  var referrerData = {{Referrer}};
+  var referrerHostname = new URL(referrerData).hostname;
+  var widgetDataByRef = getDataByReferrer(widgetData, referrerHostname);
+
+  // --- Вспомогательные функции ---
+
+  /**
+   * Находит плавающую кнопку и обновляет текст.
+   */
+  function updateFloatingButtonName(promocode) {
+    var floatingButton = document.getElementById("promo-floating-button");
+    floatingButton.textContent = "🎁 Промокод: " + promocode;
+  }
+
+  /**
+   * Создает и добавляет слайд в область контента виджета.
+   * @param {object} slideData - Данные для контента слайда.
+   */
+  function createSlide(slideData) {
+    console.info('Начинаю создание слайда', slideData);
+    var widgetContent = document.getElementById("widget-content");
+    if (!widgetContent) {
+      console.error("Element with id 'widget-content' not found.");
+      return; // Предотвращаем дальнейшее выполнение функции, если элемента нет
+    }
+
+    var slide = document.createElement("div");
+    slide.id = "modal-widget-slide-start";
+    slide.style.animation = "slideInRight 0.5s ease-out";
+
+    var title = document.createElement("h3");
+    title.textContent = slideData.title;
+    slide.appendChild(title);
+
+    var body = document.createElement("p");
+    body.innerHTML = slideData.body;
+    slide.appendChild(body);
+
+    if (slideData.image) {
+      var imageWrapper = document.createElement("div");
+      imageWrapper.style.display = "flex";
+      imageWrapper.style.justifyContent = "center";
+      imageWrapper.style.alignItems = "center";
+      slide.appendChild(imageWrapper);
+      var image = document.createElement("img");
+      image.className = "modal-widget-image";
+      image.src = slideData.image;
+      image.alt = "";
+      imageWrapper.appendChild(image);
+    }
+
+    if (slideData.promocode) {
+      var promoCodeElement = document.createElement("p");
+      promoCodeElement.className = "promocode-value";
+      promoCodeElement.id = "promocode-value";
+      promoCodeElement.textContent = slideData.promocode;
+      slide.appendChild(promoCodeElement);
+    }
+
+    if (slideData.promocode) {
+      localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "code": slideData.promocode}]) );
+      localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
+      updateFloatingButtonName(slideData.promocode);
+    }
+
+    if (slideData.caption) {
+      var caption = document.createElement("p");
+      caption.textContent = slideData.caption;
+      slide.appendChild(caption);
+    }
+
+    var buttonGroup = document.createElement("div");
+    buttonGroup.className = "modal-widget-button-group";
+
+    if (slideData && slideData.buttonPrimary) {
+      var primaryButton = document.createElement("button");
+      primaryButton.type = "button";
+      primaryButton.id = "modal-btn-goto-next-slide";
+      primaryButton.className = "modal-widget-button-primary";
+      primaryButton.textContent = slideData.buttonPrimary;
+
+      if (slideData && slideData.promocode) {
+        primaryButton.onclick = copyToClipboard;
+      } else {
+        primaryButton.onclick = handleNextSlideBtnClick;
+      }
+
+      if (slideData && slideData.buttonPrimaryAction === "close") {
+        primaryButton.onclick = closeModal;
+      }
+
+      primaryButton.setAttribute("data-next-slide", slideData.nextSlide);
+      buttonGroup.appendChild(primaryButton);
+    }
+
+    if (slideData && slideData.buttonSecondary) {
+      var secondaryButton = document.createElement("button");
+      secondaryButton.type = "button";
+      secondaryButton.id = "modal-btn-no-thank-you";
+      secondaryButton.className = "modal-widget-button-secondary";
+      secondaryButton.textContent = slideData.buttonSecondary;
+      secondaryButton.onclick = closeModal;
+      buttonGroup.appendChild(secondaryButton);
+    }
+
+    slide.appendChild(buttonGroup);
+    widgetContent.innerHTML = "";
+    widgetContent.appendChild(slide);
+  }
+
+  /**
+   * Отображает всплывающее сообщение.
+   * @param {string} message - Сообщение для отображения.
+   */
+  function showToast(message) {
+    var toast = document.createElement("div");
+    toast.textContent = message;
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.right = "20px";
+    toast.style.backgroundColor = "#4caf50";
+    toast.style.color = "#ffffff";
+    toast.style.padding = "10px 20px";
+    toast.style.borderRadius = "5px";
+    toast.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+    toast.style.zIndex = "1000";
+    document.body.appendChild(toast);
+
+    setTimeout(function () {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 0.5s";
+      setTimeout(function () {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 500);
+    }, 3000);
+  }
+
+  // --- Обработчики событий ---
+
+  /**
+   * Обрабатывает событие клика кнопки закрытия.
+   */
+  function closeModal() {
+    var modalOverlay = document.getElementById("modal-widget-overlay");
+    var floatingButton = document.getElementById("modal-widget-floating-button");
+
+    modalOverlay && (modalOverlay.style.display = "none");
+    floatingButton && (floatingButton.style.display = "block");
+    console.warn("Сработала функция закрытия модалки closeModal");
+  }
+
+  /**
+   * Обрабатывает событие клика плавающей кнопки.
+   */
+  function handleFloatingBtnClick() {
+    var modalOverlay = document.getElementById("modal-widget-overlay");
+    var floatingButton = document.getElementById("modal-widget-floating-button");
+
+    modalOverlay && (modalOverlay.style.display = "block");
+    floatingButton && (floatingButton.style.display = "none");
+
+    var storageData = JSON.parse(localStorage.getItem("userHasPromocode"));
+    var slideKey;
+    if (storageData && storageData.ref === referrerHostname && storageData.hascode) {
+      slideKey = Object.keys(widgetDataByRef).pop(); // get last slide key from object
+    } else {
+      slideKey = 'slideOne';
+    }
+    console.log('slideKey', slideKey);
+    createSlide(widgetDataByRef[slideKey]);
+  }
+
+  /**
+   * Обрабатывает событие клика кнопки "следующий слайд".
+   */
+  function handleNextSlideBtnClick() {
+    var nextSlideKey = this.getAttribute("data-next-slide");
+    if (nextSlideKey && widgetDataByRef[nextSlideKey]) {
+      createSlide(widgetDataByRef[nextSlideKey]);
+    }
+  }
+
+  /**
+   * Обрабатывает копирование промокода в буфер обмена.
+   */
+  function copyToClipboard() {
+    var promoCodeElement = document.getElementById("promocode-value");
+    if (promoCodeElement) {
+      var promoCode =
+          promoCodeElement.textContent || promoCodeElement.value;
+      navigator.clipboard
+        .writeText(promoCode)
+        .then(function () {
+        showToast("Промокод скопирован в буфер обмена!");
+      })
+        .catch(function (err) {
+        console.error("Ошибка при копировании промокода: ", err);
+      });
+      var nextSlideKey = this.getAttribute("data-next-slide");
+      createSlide(widgetDataByRef[nextSlideKey]);
+    } else {
+      console.error("Element with id='promocode-value' not found.");
+    }
+  }
+
+  /**
+    * Обрабатывает клики за пределами модального окна для его закрытия.
+    */
+  function handleOutsideModalClick(event) {
+    var modalOverlay = document.getElementById("modal-widget-overlay");
+    var modalWindow = document.getElementById("modal-widget-modal-window");
+    var floatingButton = document.getElementById("modal-widget-floating-button");
+
+    if (
+      modalOverlay &&
+      modalWindow &&
+      getComputedStyle(modalOverlay).display === "block" &&
+      !modalWindow.contains(event.target) &&
+      !event.target.closest("#promo-floating-button") &&
+      !event.target.closest("#modal-widget-modal-window") &&
+      !event.target.closest(".modal-widget-button-group")
+    ) {
+      modalOverlay.style.display = "none";
+      if (floatingButton) {
+        floatingButton.style.display = "block";
+      }
+      console.warn("Сработала функция закрытиия модалки при клике вне модалки");
+    }
+  }
+
+  // --- Инициализация ---
+
+  function checkAllowedReferrer(referrer) {
+    var allowedHosts = {{WidgetAllowedHosts}};
+    console.log(allowedHosts);
+    var referrerHostFound = allowedHosts.includes(referrerHostname);
+    return referrerHostFound;
+  }
+
+  function getDataByReferrer(widgetDataArray, referrerHostname) {
+    console.log(widgetDataArray);
+    console.log(referrerHostname);
+    return widgetDataArray.find(function(item) {
+      return item.referrer === referrerHostname;
+    });
+  }
+
+  function initWidget(slidesData) {
+    console.warn("Инициализация виджета...");
+    // Привязываем обработчики событий к элементам, только если реферер разрешен и элементы существуют.
+    var modalCloseBtn = document.getElementById("modal-widget-close");
+    var floatingButton = document.getElementById("modal-widget-floating-button");
+    var modalWindow = document.getElementById("modal-widget-overlay");
+
+    if (modalCloseBtn) {
+      modalCloseBtn.addEventListener("click", closeModal);
+    } else {
+      console.warn("Элемент id 'modal-widget-close' не найден. Кнока закрытия модального окна не будет работать.");
+    }
+    if (floatingButton) {
+      floatingButton.addEventListener("click", handleFloatingBtnClick);
+    } else {
+      console.warn("Элемент id 'modal-widget-floating-button' не найден. Плавающая кнопка не будет работать.");
+    }
+    if (modalWindow) {
+      modalWindow.addEventListener("click", handleOutsideModalClick);
+    }
+
+    // Отображаем модальное окно и прячем плавающую кнопку
+    modalWindow && (modalWindow.style.display = "block");
+    floatingButton && (floatingButton.style.display = "none");
+
+    // Проверяем наличие промокода
+    var userHasPromocode = JSON.parse(localStorage.getItem("userHasPromocode")),
+        promoButton = document.getElementById("promo-floating-button"),
+        slideKey;
+    if (userHasPromocode && promoButton && userHasPromocode.ref === referrerHostname) {
+      var promocodeValue = JSON.parse(localStorage.getItem("promocodeValue"));
+      promoButton.textContent = "🎁 Промокод: " + promocodeValue.code;
+      slideKey = Object.keys(slidesData).pop();
+    } else {
+      slideKey = 'slideOne';
+    }
+    createSlide(slidesData[slideKey]);
+  }
+
+  // проверка referrer переед инициализацией виджета
+  if (referrerData) {
+    console.info("Пользователь перешел с сайта", referrerData);
+    if (checkAllowedReferrer(referrerData)) {
+      console.info("Реферер совпадал, продолжаю создание виджета.");
+      var widgetDataByRef = getDataByReferrer(widgetData, new URL(referrerData).hostname);
+      console.log('Получение данных по хосту:', widgetDataByRef);
+      initWidget(widgetDataByRef);
+    } else {
+      console.warn("Реферер не совпал. Виджет не показываем.", referrerData);
+    }
+  } else {
+    console.info("Нет источника перехода. Виджет не показываем.");
+  }
+
+  // изменяем положение кнопки, если url содержит product
+  function updateFloatingButtonPosition() {
+    var button = document.getElementById('modal-widget-floating-button');
+    if (!button) return;
+
+    button.style.position = 'fixed';
+
+    if (window.location.href.includes('product')) {
+      button.style.top = '20px';
+      button.style.left = '20px';
+      button.style.bottom = '';
+      button.style.right = '';
+    } else {
+      button.style.bottom = '45px';
+      button.style.right = '20px';
+      button.style.top = '';
+      button.style.left = '';
+    }
+  }
+
+  // Хак для перехвата pushState и replaceState
+  var wrapHistoryMethod = function(type) {
+    var orig = history[type];
+    history[type] = function() {
+      var result = orig.apply(this, arguments);
+      var event = document.createEvent('Event');
+      event.initEvent('locationchange', true, true);
+      window.dispatchEvent(event);
+      return result;
+    };
+  };
+
+  wrapHistoryMethod('pushState');
+  wrapHistoryMethod('replaceState');
+
+  // Слушаем все возможные изменения адреса
+  window.addEventListener('popstate', updateFloatingButtonPosition);
+  window.addEventListener('locationchange', updateFloatingButtonPosition);
+
+  // Вызов при первом рендере
+  updateFloatingButtonPosition();
+</script>
