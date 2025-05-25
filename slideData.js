@@ -1,6 +1,7 @@
 function() {
     return {
       referrer: "google.com",
+      promocode: "ПРОМОКОД",
       slideOne: {
         title: "Кажется, Вы у нас впервые!",
         body: "Хотим рассказать 3 факта о себе и подарить нежную и красивую <strong>Филадельфию от Шефа</strong>!",
@@ -48,7 +49,7 @@ function() {
         "https://s3.ru1.storage.beget.cloud/6c292957db63-forgiving-sinthia/kwork_kontoravkusa/IMG_2377.webp",
         caption:
         "Введите промокод и получите нежный, но красивый ролл Филадельфия с авокадо в подарок при первом заказе от 1390 р.",
-        promocode: "ФИЛА",
+        promocode: "ПРОМОКОД",
         buttonPrimary: "Скопировать промокод",
         buttonSecondary: "",
         nextSlide: "slideSix",
