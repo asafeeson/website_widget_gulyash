@@ -184,6 +184,13 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
+.promocode-title {
+  text-transform: uppercase;
+  color: var(--main-color);
+  margin: 0.5rem 0 1rem 0;
+  font-size: larger;
+}
+
 .promocode-value {
   border: 2px dashed var(--main-color);
   border-radius: 0.5rem;
@@ -193,6 +200,7 @@
   padding: 0.5rem 0;
   font-size: x-large;
   font-weight: bold;
+  margin-top: 1rem;
 }
 
 .promocode-value:hover {

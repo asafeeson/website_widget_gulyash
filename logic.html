@@ -1,9 +1,12 @@
 <script>
   // Глобальные данные из переменной GTM
   var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
-  var referrerData = {{Referrer}};
-  var referrerHostname = new URL(referrerData).hostname;
-  var widgetDataByRef = getDataByReferrer(widgetData, referrerHostname);
+  var listPizzaSlugs = {{List of Pizza URL Slugs}}
+  var listSushiSlugs = {{List of Sushi URL Slugs}}
+  var referrerHostname = {{Referrer}} ? new URL({{Referrer}}).hostname : '';
+  var widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, location.pathname);
+  console.log('widgetDataGlobal parameters:', widgetData, {{Referrer}}, location.pathname);
+  console.log('widgetDataGlobal:', widgetDataGlobal)
 
   // --- Вспомогательные функции ---
 
@@ -53,6 +56,10 @@
     }
 
     if (slideData.promocode) {
+      var promocodeTitle = document.createElement('h4');
+      promocodeTitle.className = 'promocode-title';
+      promocodeTitle.textContent = 'ПРОМОКОД';
+      slide.appendChild(promocodeTitle);
       var promoCodeElement = document.createElement("p");
       promoCodeElement.className = "promocode-value";
       promoCodeElement.id = "promocode-value";
@@ -164,15 +171,18 @@
     modalOverlay && (modalOverlay.style.display = "block");
     floatingButton && (floatingButton.style.display = "none");
 
+    if (!widgetDataGlobal) {
+        widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, location.pathname);
+    }
     var storageData = JSON.parse(localStorage.getItem("userHasPromocode"));
     var slideKey;
     if (storageData && storageData.ref === referrerHostname && storageData.hascode) {
-      slideKey = Object.keys(widgetDataByRef).pop(); // get last slide key from object
+      slideKey = Object.keys(widgetDataGlobal).pop(); // get last slide key from object
     } else {
       slideKey = 'slideOne';
     }
     console.log('slideKey', slideKey);
-    createSlide(widgetDataByRef[slideKey]);
+    createSlide(widgetDataGlobal[slideKey]);
   }
 
   /**
@@ -180,8 +190,11 @@
    */
   function handleNextSlideBtnClick() {
     var nextSlideKey = this.getAttribute("data-next-slide");
-    if (nextSlideKey && widgetDataByRef[nextSlideKey]) {
-      createSlide(widgetDataByRef[nextSlideKey]);
+    var hostname = location.pathname;
+    widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, hostname);
+    console.log('handleNextSlideBtnClick.widgetDataGlobal', widgetDataGlobal )
+    if (nextSlideKey && widgetDataGlobal[nextSlideKey]) {
+      createSlide(widgetDataGlobal[nextSlideKey]);
     }
   }
 
@@ -202,7 +215,7 @@
         console.error("Ошибка при копировании промокода: ", err);
       });
       var nextSlideKey = this.getAttribute("data-next-slide");
-      createSlide(widgetDataByRef[nextSlideKey]);
+      createSlide(widgetDataGlobal[nextSlideKey]);
     } else {
       console.error("Element with id='promocode-value' not found.");
     }
@@ -236,19 +249,51 @@
   // --- Инициализация ---
 
   function checkAllowedReferrer(referrer) {
-    var allowedHosts = {{WidgetAllowedHosts}};
-    console.log(allowedHosts);
+    var allowedHosts = {{Widget Allowed Hosts}};
     var referrerHostFound = allowedHosts.includes(referrerHostname);
     return referrerHostFound;
   }
 
-  function getDataByReferrer(widgetDataArray, referrerHostname) {
-    console.log(widgetDataArray);
-    console.log(referrerHostname);
-    return widgetDataArray.find(function(item) {
-      return item.referrer === referrerHostname;
-    });
+  // get widget data helpers
+  function getDataByReferrer(widgetDataArray, referrer) {
+    var referrerHostname = new URL(referrer).hostname;
+    if (referrerHostname) {
+      return widgetDataArray.find(function(item) {
+            return item.referrer === referrerHostname;
+          });
+    }
+    return null;
   }
+
+  function getDataByHostname(hostname) {
+    if ( listPizzaSlugs.includes(hostname) ) {
+      console.log("Совпало по списку пицца. Инциирую виджет Пицца.");
+      if ( widgetDataGlobal !== {{widgetDataPizza}} ) {
+        return {{widgetDataPizza}};
+      }
+    } else if ( listSushiSlugs.includes(hostname)) {
+      console.log("Совпало по списку суши. Инциирую виджет Суши.");
+      if ( widgetDataGlobal !== {{widgetDataSushi}} ) {
+        return {{widgetDataSushi}};
+      }
+    }
+    return null;
+  }
+
+  function getWidgetData(data, referrer, hostname) {
+    if (referrer) {
+      console.info('Реферер есть, ищем данные по нему.')
+      console.info({data: data, referrer: referrer, hostname: hostname})
+      var widgetData = getDataByReferrer(data, referrer);
+    }
+    if (widgetData === null || hostname) {
+      console.info('Рефрер пустой или не совпал со списком разрешенных, ищем данные по hostname.')
+      console.info({data: data, referrer: referrer, hostname: hostname})
+      return getDataByHostname(hostname);
+    }
+  }
+
+  // get widget data helpers /
 
   function initWidget(slidesData) {
     console.warn("Инициализация виджета...");
@@ -290,18 +335,25 @@
   }
 
   // проверка referrer переед инициализацией виджета
-  if (referrerData) {
-    console.info("Пользователь перешел с сайта", referrerData);
-    if (checkAllowedReferrer(referrerData)) {
+  if ({{Referrer}}) {
+    console.info("Пользователь перешел с сайта", {{Referrer}});
+    if (checkAllowedReferrer({{Referrer}})) {
       console.info("Реферер совпадал, продолжаю создание виджета.");
-      var widgetDataByRef = getDataByReferrer(widgetData, new URL(referrerData).hostname);
-      console.log('Получение данных по хосту:', widgetDataByRef);
-      initWidget(widgetDataByRef);
+      var widgetDataGlobal = getDataByReferrer(widgetData, {{Referrer}});
+      if (!widgetDataGlobal) {
+        throw Error('Данные для создания виджета не найдены.');
+      }
+      console.log('Получение данных по хосту:', widgetDataGlobal);
+      initWidget(widgetDataGlobal);
     } else {
-      console.warn("Реферер не совпал. Виджет не показываем.", referrerData);
+      console.warn("Реферер не совпал. Виджет не показываем.", {{Referrer}});
     }
   } else {
-    console.info("Нет источника перехода. Виджет не показываем.");
+    console.info("Нет источника перехода. Проверяем pathname:", location.pathname);
+    var widgetData = getDataByHostname(location.pathname);
+    if (widgetData) {
+      initWidget(widgetData);
+    }
   }
 
   // изменяем положение кнопки, если url содержит product
@@ -336,12 +388,31 @@
     };
   };
 
+  var reinitWidget = function() {
+    console.log('Ре-инициализация виджета по событию:', 'изменился location в истории');
+    // remove old nodes
+    // var modalWindow = document.getElementById('modal-widget-overlay');
+    // var floatinbButton = document.getElementById('modal-widget-floating-button');
+    // if (modalWindow) {modalWindow.remove()};
+    // if (floatinbButton) (floatinbButton.remove());
+    // create new widget
+    if ( listPizzaSlugs.includes(location.pathname) ) {
+      console.log("Совпало по списку пицца. Инциирую виджет Пицца.");
+      initWidget({{widgetDataPizza}});
+    } else if ( listSushiSlugs.includes(location.pathname)) {
+      console.log("Совпало по списку суши. Инциирую виджет Суши.");
+      initWidget({{widgetDataSushi}});
+    }
+  }
+
   wrapHistoryMethod('pushState');
   wrapHistoryMethod('replaceState');
 
   // Слушаем все возможные изменения адреса
   window.addEventListener('popstate', updateFloatingButtonPosition);
   window.addEventListener('locationchange', updateFloatingButtonPosition);
+  window.addEventListener('pushState', reinitWidget);
+  window.addEventListener('locationchange', reinitWidget);
 
   // Вызов при первом рендере
   updateFloatingButtonPosition();
