@@ -1,11 +1,16 @@
 <script>
+  if (!localStorage.getItem('firstVisit')) {
+    localStorage.setItem('firstVisit', 'true');
+    dataLayer.push({ 'event': 'first_visit' });
+  }
+
   // Глобальные данные из переменной GTM
-  var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
+  var widgetDataArray = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
   var listPizzaSlugs = {{List of Pizza URL Slugs}}
   var listSushiSlugs = {{List of Sushi URL Slugs}}
   var referrerHostname = {{Referrer}} ? new URL({{Referrer}}).hostname : '';
-  var widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, location.pathname);
-  console.log('widgetDataGlobal parameters:', widgetData, {{Referrer}}, location.pathname);
+  var widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, location.pathname);
+  console.log('widgetDataGlobal parameters:', widgetDataArray, {{Referrer}}, location.pathname);
   console.log('widgetDataGlobal:', widgetDataGlobal)
 
   // --- Вспомогательные функции ---
@@ -13,9 +18,20 @@
   /**
    * Находит плавающую кнопку и обновляет текст.
    */
-  function updateFloatingButtonName(promocode) {
+  function updateFloatingButtonName() {
     var floatingButton = document.getElementById("promo-floating-button");
-    floatingButton.textContent = "🎁 Промокод: " + promocode;
+    var promocodes = JSON.parse(localStorage.getItem('promocodeValue')); // is an array of objects with key 'code'
+    if (floatingButton) {
+      var promocode = '';
+      if (promocodes && Array.isArray(promocodes) && promocodes.length > 0) {
+        if (promocodes.length === 1) {
+          promocode = promocodes[0].code;
+        } else {
+          promocode = promocodes.map(function(item) { return item.code; }).join(' | ');
+        }
+        floatingButton.textContent = "🎁 Промокод: " + promocode;
+      }
+    }
   }
 
   /**
@@ -23,7 +39,7 @@
    * @param {object} slideData - Данные для контента слайда.
    */
   function createSlide(slideData) {
-    console.info('Начинаю создание слайда', slideData);
+    // console.info('Начинаю создание слайда', slideData);
     var widgetContent = document.getElementById("widget-content");
     if (!widgetContent) {
       console.error("Element with id 'widget-content' not found.");
@@ -68,8 +84,21 @@
     }
 
     if (slideData.promocode) {
-      localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "code": slideData.promocode}]) );
-      localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
+      var promocodeValue = JSON.parse(localStorage.getItem('promocodeValue'));
+      var codeInSildeData = null;
+      if (promocodeValue) {
+        codeInSildeData = promocodeValue.find(function(item) {return item.code === slideData.promocode});
+      }
+      console.log("codeInSildeData", codeInSildeData);
+      if (promocodeValue && codeInSildeData == null) {
+        var newValue = {"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode};
+        promocodeValue.push(newValue);
+        console.log("Добавляю в новое значение к хранилишу промокода:", newValue);
+        localStorage.setItem("promocodeValue", JSON.stringify(promocodeValue));
+      } else {
+        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode}]) );
+      }
+      localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "hascode": true}]));
       updateFloatingButtonName(slideData.promocode);
     }
 
@@ -172,11 +201,18 @@
     floatingButton && (floatingButton.style.display = "none");
 
     if (!widgetDataGlobal) {
-        widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, location.pathname);
+        widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, location.pathname);
     }
-    var storageData = JSON.parse(localStorage.getItem("userHasPromocode"));
+    var storageData = JSON.parse(localStorage.getItem("promocodeValue"));
+    console.log('storageData', storageData)
+    var userHasPromocode = null;
+    if (storageData) {
+      userHasPromocode = !!storageData.find(function(item){return item.code === widgetDataGlobal.promocode});
+      console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === widgetDataGlobal.promocode}), widgetDataGlobal.promocode)
+    }
     var slideKey;
-    if (storageData && storageData.ref === referrerHostname && storageData.hascode) {
+    // if (storageData && storageData.ref === referrerHostname && userHasPromocode) {
+    if (storageData && userHasPromocode) {
       slideKey = Object.keys(widgetDataGlobal).pop(); // get last slide key from object
     } else {
       slideKey = 'slideOne';
@@ -191,7 +227,7 @@
   function handleNextSlideBtnClick() {
     var nextSlideKey = this.getAttribute("data-next-slide");
     var hostname = location.pathname;
-    widgetDataGlobal = getWidgetData(widgetData, {{Referrer}}, hostname);
+    widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, hostname);
     console.log('handleNextSlideBtnClick.widgetDataGlobal', widgetDataGlobal )
     if (nextSlideKey && widgetDataGlobal[nextSlideKey]) {
       createSlide(widgetDataGlobal[nextSlideKey]);
@@ -255,10 +291,10 @@
   }
 
   // get widget data helpers
-  function getDataByReferrer(widgetDataArray, referrer) {
+  function getDataByReferrer(dataArray, referrer) {
     var referrerHostname = new URL(referrer).hostname;
     if (referrerHostname) {
-      return widgetDataArray.find(function(item) {
+      return dataArray.find(function(item) {
             return item.referrer === referrerHostname;
           });
     }
@@ -321,39 +357,24 @@
     floatingButton && (floatingButton.style.display = "none");
 
     // Проверяем наличие промокода
-    var userHasPromocode = JSON.parse(localStorage.getItem("userHasPromocode")),
-        promoButton = document.getElementById("promo-floating-button"),
-        slideKey;
-    if (userHasPromocode && promoButton && userHasPromocode.ref === referrerHostname) {
-      var promocodeValue = JSON.parse(localStorage.getItem("promocodeValue"));
-      promoButton.textContent = "🎁 Промокод: " + promocodeValue.code;
-      slideKey = Object.keys(slidesData).pop();
+    var storageData = JSON.parse(localStorage.getItem("promocodeValue"));
+    // var promoButton = document.getElementById("promo-floating-button");
+    var slideKey;
+    
+    updateFloatingButtonName();
+
+    var userHasPromocode = null;
+    if (storageData) {
+      userHasPromocode = !!storageData.find(function(item){return item.code === slidesData.promocode});
+      console.log('initWidget > userHasPromocode', storageData.find(function(item){return item.code === slidesData.promocode}), slidesData.promocode)
+    }
+    if (storageData && userHasPromocode) {
+      slideKey = Object.keys(slidesData).pop(); // get last slide key from object
     } else {
       slideKey = 'slideOne';
     }
-    createSlide(slidesData[slideKey]);
-  }
 
-  // проверка referrer переед инициализацией виджета
-  if ({{Referrer}}) {
-    console.info("Пользователь перешел с сайта", {{Referrer}});
-    if (checkAllowedReferrer({{Referrer}})) {
-      console.info("Реферер совпадал, продолжаю создание виджета.");
-      var widgetDataGlobal = getDataByReferrer(widgetData, {{Referrer}});
-      if (!widgetDataGlobal) {
-        throw Error('Данные для создания виджета не найдены.');
-      }
-      console.log('Получение данных по хосту:', widgetDataGlobal);
-      initWidget(widgetDataGlobal);
-    } else {
-      console.warn("Реферер не совпал. Виджет не показываем.", {{Referrer}});
-    }
-  } else {
-    console.info("Нет источника перехода. Проверяем pathname:", location.pathname);
-    var widgetData = getDataByHostname(location.pathname);
-    if (widgetData) {
-      initWidget(widgetData);
-    }
+    createSlide(slidesData[slideKey]);
   }
 
   // изменяем положение кнопки, если url содержит product
@@ -390,18 +411,33 @@
 
   var reinitWidget = function() {
     console.log('Ре-инициализация виджета по событию:', 'изменился location в истории');
-    // remove old nodes
-    // var modalWindow = document.getElementById('modal-widget-overlay');
-    // var floatinbButton = document.getElementById('modal-widget-floating-button');
-    // if (modalWindow) {modalWindow.remove()};
-    // if (floatinbButton) (floatinbButton.remove());
-    // create new widget
+    var promocode = JSON.parse(localStorage.getItem('promocodeValue'));
     if ( listPizzaSlugs.includes(location.pathname) ) {
-      console.log("Совпало по списку пицца. Инциирую виджет Пицца.");
-      initWidget({{widgetDataPizza}});
+      console.log("Совпало по списку пицца. Провреяю наличие промокода у пользователя.");
+      var initData = {{widgetDataPizza}};
+      var codeInInitData = null;
+      if (promocode) {
+         codeInInitData = promocode.find(function(item) {return item.code === initData.promocode});
+      };
+      if (promocode && codeInInitData) {
+        console.log("Промокод есть и совпадает с виджетом", codeInInitData);
+        return;
+      }
+      console.log("Промокод не совпрадает с виджетом, создаю виджет.", initData.promocode, promocode);
+      initWidget(initData);
     } else if ( listSushiSlugs.includes(location.pathname)) {
       console.log("Совпало по списку суши. Инциирую виджет Суши.");
-      initWidget({{widgetDataSushi}});
+      var initData = {{widgetDataSushi}};
+      var codeInInitData = null;
+      if (promocode) {
+        codeInInitData = promocode.find(function(item) {return item.code === initData.promocode});
+      }
+      if (promocode && codeInInitData) {
+        console.log("Промокод есть и совпадает с виджетом", codeInInitData);
+        return;
+      }
+      console.log("Промокод не совпрадает с виджетом, создаю виджет.", initData.promocode, promocode);
+      initWidget(initData);
     }
   }
 
@@ -413,6 +449,31 @@
   window.addEventListener('locationchange', updateFloatingButtonPosition);
   window.addEventListener('pushState', reinitWidget);
   window.addEventListener('locationchange', reinitWidget);
+
+  // проверка referrer переед инициализацией виджета
+
+  // если пользователь первый раз, показывает виджет.
+  // если пользователь второй раз, ничего не показываем.
+
+
+  if ({{Referrer}}) {
+    console.info("Пользователь перешел с сайта", {{Referrer}});
+    if (checkAllowedReferrer({{Referrer}})) {
+      console.info("Реферер совпадал, продолжаю создание виджета.");
+      var widgetDataByReferrer = getDataByReferrer(widgetDataArray, {{Referrer}});
+      console.log('widgetDataByReferrer', widgetDataByReferrer);
+      if (!widgetDataByReferrer) {
+        throw Error('Данные для создания виджета не найдены.');
+      }
+      console.log('Получение данных по хосту:', widgetDataByReferrer);
+      initWidget(widgetDataGlobal);
+    } else {
+      console.warn("Реферер пустой или не совпал со списком разрешенных.", {{Referrer}});
+    }
+  } else {
+    console.info("Нет источника перехода. Проверяем pathname:", location.pathname);
+    initWidget(widgetDataGlobal);
+  }
 
   // Вызов при первом рендере
   updateFloatingButtonPosition();
