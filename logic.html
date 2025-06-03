@@ -319,13 +319,6 @@
       }
     }
 
-    /**
-     * Возвращает объект из массива данных, соответствующий заданной utm-кампании.
-     *
-     * @param {Array<Object>} dataArray - Массив объектов с настройками виджета, каждый из которых содержит utm-данные.
-     * @param {string} campaign - Значение utm_campaign для поиска.
-     * @returns {Object|null} Найденный объект с соответствующим utm_campaign или null, если не найдено или параметры не указаны.
-     */
     function getDataByUtmCampaign(dataArray, pageUrl) {
         if (!dataArray) {
             console.error("Не указан список настроек виджета для поиска по UTM");
@@ -337,13 +330,6 @@
         })
     }
 
-    /**
-     * Проверяет, содержит ли переданный URL параметр utm_campaign с заданным значением. И возвращает его значение.
-     *
-     * @param {string} url - URL-адрес для проверки.
-     * @param {string} campaign - Значение utm_campaign, которое требуется найти.
-     * @returns {boolean} Возвращает true, если utm_campaign совпадает с campaign, иначе false.
-     */
     function hasUtmCampaign(url) {
         try {
             var urlObj = new URL(url);
@@ -424,8 +410,6 @@
     } else {
         console.info('Не удалось инциировать виджет.');
     }
-
-
 
     wrapHistoryMethod('pushState');
     wrapHistoryMethod('replaceState');
