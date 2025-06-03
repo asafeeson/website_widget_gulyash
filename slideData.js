@@ -1,5 +1,6 @@
 function() {
     return {
+      id: "template",
       referrer: "google.com",
       promocode: "ПРОМОКОД",
       slugs: ["slug1", "slug2"],
