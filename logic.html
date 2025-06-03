@@ -69,11 +69,11 @@
     if (promocodeValue) {
         codeInSildeData = promocodeValue.find(function(item) {return item.code === slideData.promocode});
     }
-    console.log("codeInSildeData", codeInSildeData);
+    // console.log("codeInSildeData", codeInSildeData);
     if (promocodeValue && codeInSildeData == null) {
         var newValue = {"ref": referrerHostname, "utm": pageUrlUtmCampaign, "code": slideData.promocode};
         promocodeValue.push(newValue);
-        console.log("Добавляю в новое значение к хранилишу промокодов:", newValue);
+        // console.log("Добавляю в новое значение к хранилишу промокодов:", newValue);
         localStorage.setItem("promocodeValue", JSON.stringify(promocodeValue));
     } else {
         localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "utm": pageUrlUtmCampaign, "code": slideData.promocode}]) );
