@@ -234,9 +234,6 @@
       }
     }
 
-    /**
-      * Обрабатывает клики за пределами модального окна для его закрытия.
-      */
     function handleOutsideModalClick(event) {
       var modalOverlay = document.getElementById("modal-widget-overlay");
       var modalWindow = document.getElementById("modal-widget-modal-window");
@@ -258,22 +255,6 @@
         console.warn("Сработала функция закрытиия модалки при клике вне модалки");
       }
     }
-
-    // --- Инициализация ---
-
-  //   function checkAllowedReferrer(referrerUrl, widgetDataArray) {
-  //     if (!referrerUrl) {
-  //         console.warn('Нет URL источника перехода.');
-  //         return false;
-  //     }
-
-  //     var allowedHosts = {WidgetAllowedHosts};
-  //     var hostname = new URL(referrerUrl).hostname;
-  //     var referrerHostFound = allowedHosts.includes(hostname);
-
-
-  //     return referrerHostFound;
-  //   }
 
     function getDataByReferrer(widgetDataArray, referrerUrl) {
       var hostname = new URL(referrerUrl).hostname;
