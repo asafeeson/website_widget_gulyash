@@ -59,8 +59,8 @@
       }
 
       if (slideData.promocode) {
-        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, utm: , "code": slideData.promocode}]) );
-        localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
+        localStorage.setItem("promocodeValue", JSON.stringify([{ref: referrerHostname, utm: pageUrlUtmCampaign, code: slideData.promocode}]) );
+        // localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
         updateFloatingButtonName(slideData.promocode);
       }
 
