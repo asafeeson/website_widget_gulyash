@@ -410,9 +410,9 @@
     var isFirstVisit;
     if (activeWidgetData) {
       isFirstVisit = firstVisit.find(function(item){return item.referrer === activeWidgetData.referrer});
-    }
-    if (!isFirstVisit) {
-      firstVisit.push({referrer: activeWidgetData.referrer});
+      if (!isFirstVisit) {
+        firstVisit.push({referrer: activeWidgetData.referrer});
+      }
     }
     return !!isFirstVisit;
   }
