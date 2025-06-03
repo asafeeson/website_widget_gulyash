@@ -153,26 +153,6 @@
       console.warn("Сработала функция закрытия модалки closeModal");
     }
 
-    /**
-     * Обрабатывает событие клика плавающей кнопки.
-     */
-    // function handleFloatingBtnClick() {
-    //   var modalOverlay = document.getElementById("modal-widget-overlay");
-    //   var floatingButton = document.getElementById("modal-widget-floating-button");
-
-    //   modalOverlay && (modalOverlay.style.display = "block");
-    //   floatingButton && (floatingButton.style.display = "none");
-
-    //   var storageData = JSON.parse(localStorage.getItem("userHasPromocode"));
-    //   var slideKey;
-    //   if (storageData && storageData.ref === referrerHostname && storageData.hascode) {
-    //     slideKey = Object.keys(activeWidgetData).pop(); // get last slide key from object
-    //   } else {
-    //     slideKey = 'slideOne';
-    //   }
-    //   console.log('slideKey', slideKey);
-    //   createSlide(activeWidgetData[slideKey]);
-    // }
     function handleFloatingBtnClick() {
         var modalOverlay = document.getElementById("modal-widget-overlay");
         var floatingButton = document.getElementById("modal-widget-floating-button");
@@ -184,14 +164,12 @@
             return;
         }
         var storageData = JSON.parse(localStorage.getItem("promocodeValue"));
-        console.log('storageData', storageData);
         var userHasPromocode = null;
         if (storageData) {
             userHasPromocode = !!storageData.find(function(item){return item.code === activeWidgetData.promocode});
             console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === activeWidgetData.promocode}), activeWidgetData.promocode)
         }
         var slideKey;
-        // if (storageData && storageData.ref === referrerHostname && userHasPromocode) {
         if (storageData && userHasPromocode) {
             slideKey = Object.keys(activeWidgetData).pop(); // get last slide key from object
         } else {
@@ -201,9 +179,6 @@
         createSlide(activeWidgetData[slideKey]);
     }    
 
-    /**
-     * Обрабатывает событие клика кнопки "следующий слайд".
-     */
     function handleNextSlideBtnClick() {
       var nextSlideKey = this.getAttribute("data-next-slide");
       if (nextSlideKey && activeWidgetData[nextSlideKey]) {
@@ -211,9 +186,6 @@
       }
     }
 
-    /**
-     * Обрабатывает копирование промокода в буфер обмена.
-     */
     function copyToClipboard() {
       var promoCodeElement = document.getElementById("promocode-value");
       if (promoCodeElement) {
