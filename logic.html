@@ -184,6 +184,8 @@
       var userHasPromocode = null;
       if (storageData) {
           userHasPromocode = !!storageData.find(function(item){return item.code === activeWidgetData.promocode});
+          console.log("activeWidgetData.promocode: ", activeWidgetData.promocode);
+          console.log("storageData: ", storageData);
           console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === activeWidgetData.promocode}), activeWidgetData.promocode)
       }
       var slideKey;
