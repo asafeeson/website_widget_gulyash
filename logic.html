@@ -1,4 +1,8 @@
 <script>
+    if (!localStorage.getItem('firstVisit')) {
+        localStorage.setItem('firstVisit', 'true');
+        dataLayer.push({ 'event': 'first_visit' });
+    }
     // Глобальные данные из переменной GTM
     console.log({{Referrer}});
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
