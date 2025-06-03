@@ -2,7 +2,10 @@
     if (!localStorage.getItem('firstVisit')) {
         localStorage.setItem('firstVisit', 'true');
         dataLayer.push({ 'event': 'first_visit' });
+    } else {
+        localStorage.setItem('firstVisit', 'false'); 
     }
+
     // Глобальные данные из переменной GTM
     console.log({{Referrer}});
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
@@ -416,31 +419,41 @@
     };
 
     // проверка referrer переед инициализацией виджета
-    if ({{Referrer}}) {
-      console.info("Источник перехода пользователя:", {{Referrer}});
-      var isInitiatedByRef = initWidgetByReferrer({{Referrer}}, widgetData);
-      if (!isInitiatedByRef) {
-          console.info('Не удалось инициировать виджет по Referrer.');
-          console.info('Пробую инициировать виджет по UTM.');
-          var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
-          if (!isInitiatedByUtm) {
-              console.info('Не удалось инициировать виджет по UTM.');
-          } else {
-              console.info('Виджет инциирован по UTM.');
-          }
-      } else {
-          console.info('Виджет инициирован по Referrer.');
-      }
-    } else if (hasUtmCampaign({{Page URL}})) {
-        var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
-        if (!isInitiatedByUtm) {
-            console.info('Не удалось инициировать виджет по UTM.');
-        } else {
-            console.info('Виджет инциирован по UTM.');
-        }
+    var isFirstVisit = localStorage.getItem('firstVisit');
+
+    if (isFirstVisit) {
+        console.info('Пользователь первый раз, показываем виджет.');
+        if ({{Referrer}}) {
+            console.info("Источник перехода пользователя:", {{Referrer}});
+            var isInitiatedByRef = initWidgetByReferrer({{Referrer}}, widgetData);
+            if (!isInitiatedByRef) {
+                console.info('Не удалось инициировать виджет по Referrer.');
+                console.info('Пробую инициировать виджет по UTM.');
+                var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
+                if (!isInitiatedByUtm) {
+                    console.info('Не удалось инициировать виджет по UTM.');
+                } else {
+                    console.info('Виджет инциирован по UTM.');
+                }
+            } else {
+                console.info('Виджет инициирован по Referrer.');
+            }
+            } else if (hasUtmCampaign({{Page URL}})) {
+                var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
+                if (!isInitiatedByUtm) {
+                    console.info('Не удалось инициировать виджет по UTM.');
+                } else {
+                    console.info('Виджет инциирован по UTM.');
+                }
+            } else {
+                console.info('Не удалось инциировать виджет.');
+            }
+
     } else {
-        console.info('Не удалось инциировать виджет.');
+        console.info('Пользователь уже был у нас. Виджет не показываем.')
     }
+
+   
 
     wrapHistoryMethod('pushState');
     wrapHistoryMethod('replaceState');
