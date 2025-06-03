@@ -18,7 +18,7 @@
    * @param {object} slideData - Данные для контента слайда.
    */
   function createSlide(slideData) {
-    console.info('Начинаю создание слайда', slideData);
+    // console.info('Начинаю создание слайда', slideData);
     var widgetContent = document.getElementById("widget-content");
     if (!widgetContent) {
       console.error("Element with id 'widget-content' not found.");
@@ -167,7 +167,7 @@
 
     modalOverlay && (modalOverlay.style.display = "none");
     floatingButton && (floatingButton.style.display = "block");
-    console.warn("Сработала функция закрытия модалки closeModal");
+    // console.warn("Сработала функция закрытия модалки closeModal");
   }
 
   function handleFloatingBtnClick() {
@@ -184,9 +184,9 @@
       var userHasPromocode = null;
       if (storageData) {
           userHasPromocode = !!storageData.find(function(item){return item.code === activeWidgetData.promocode});
-          console.log("activeWidgetData.promocode: ", activeWidgetData.promocode);
-          console.log("storageData: ", storageData);
-          console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === activeWidgetData.promocode}), activeWidgetData.promocode)
+          // console.log("activeWidgetData.promocode: ", activeWidgetData.promocode);
+          // console.log("storageData: ", storageData);
+          // console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === activeWidgetData.promocode}), activeWidgetData.promocode)
       }
       var slideKey;
       if (storageData && userHasPromocode) {
@@ -194,7 +194,7 @@
       } else {
           slideKey = 'slideOne';
       }
-      console.log('slideKey', slideKey);
+      // console.log('slideKey', slideKey);
       createSlide(activeWidgetData[slideKey]);
   }
 
@@ -243,7 +243,7 @@
       if (floatingButton) {
         floatingButton.style.display = "block";
       }
-      console.warn("Сработала функция закрытиия модалки при клике вне модалки");
+      // console.warn("Сработала функция закрытиия модалки при клике вне модалки");
     }
   }
 
@@ -253,14 +253,14 @@
       return item.referrer === hostname;
     });
     if (!data) {
-        console.warn("JSON настройки виджета не найдены по referrer: ", hostname);
+        // console.warn("JSON настройки виджета не найдены по referrer: ", hostname);
         return null;
     }
     return data;
   }
 
   function initWidget(slidesData) {
-    console.warn("Инициализация виджета...");
+    // console.warn("Инициализация виджета...");
     // Привязываем обработчики событий к элементам, только если реферер разрешен и элементы существуют.
     var modalCloseBtn = document.getElementById("modal-widget-close");
     var floatingButton = document.getElementById("modal-widget-floating-button");
@@ -332,7 +332,7 @@
   function hasUtmCampaign(url) {
       try {
           var urlObj = new URL(url);
-          console.warn('urlObj.searchParams.has(utm_campaign): ', urlObj.searchParams.has('utm_campaign'))
+          // console.warn('urlObj.searchParams.has(utm_campaign): ', urlObj.searchParams.has('utm_campaign'))
           return urlObj.searchParams.has('utm_campaign');
       } catch (error) {
           console.error(error);
@@ -355,7 +355,7 @@
   function initWidgetByReferrer(referrerUrl, widgetData){
       var widgetDataRef = getDataByReferrer(widgetData, referrerUrl);
       if (!widgetDataRef) {
-          console.warn('Данные по рефу не найдены');
+          // console.warn('Данные по рефу не найдены');
           return false;
       }
       activeWidgetData = widgetDataRef;
@@ -377,8 +377,7 @@
       }
       activeWidgetData = widgetDataUtm;
       var utmCampaign = url.searchParams.get('utm_campaign');
-      console.log('Получение данных по utm_campaign');
-
+      // console.log('Получение данных по utm_campaign');
       initWidget(widgetDataUtm);
       return true;
   };
@@ -413,12 +412,9 @@
           } else {
               console.info('Не удалось инциировать виджет.');
           }
-
   } else {
       console.info('Пользователь уже был у нас. Виджет не показываем.')
   }
-
-
 
   wrapHistoryMethod('pushState');
   wrapHistoryMethod('replaceState');
