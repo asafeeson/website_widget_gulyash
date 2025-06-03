@@ -1,11 +1,4 @@
 <script>
-    if (!localStorage.getItem('firstVisit')) {
-        localStorage.setItem('firstVisit', 'true');
-        dataLayer.push({ 'event': 'first_visit' });
-    } else {
-        localStorage.setItem('firstVisit', 'false'); 
-    }
-
     // Глобальные данные из переменной GTM
     console.log({{Referrer}});
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
@@ -419,9 +412,9 @@
     };
 
     // проверка referrer переед инициализацией виджета
-    var isFirstVisit = localStorage.getItem('firstVisit');
-
-    if (isFirstVisit) {
+    if (!localStorage.getItem('firstVisit')) {
+        localStorage.setItem('firstVisit', 'true');
+        dataLayer.push({ 'event': 'first_visit' });
         console.info('Пользователь первый раз, показываем виджет.');
         if ({{Referrer}}) {
             console.info("Источник перехода пользователя:", {{Referrer}});
