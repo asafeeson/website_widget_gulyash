@@ -407,7 +407,10 @@
     // сравнить ref в сохраненных параметрах
     // если ref совпадает с текущим рефералом из JSON, выдаем false
     // если ref не совпадает с рефералом из JSON, выдаем true
-    var isFirstVisit = firstVisit.find(function(item){return item.referrer === activeWidgetData.referrer});
+    var isFirstVisit;
+    if (activeWidgetData) {
+      isFirstVisit = firstVisit.find(function(item){return item.referrer === activeWidgetData.referrer});
+    }
     if (!isFirstVisit) {
       firstVisit.push({referrer: activeWidgetData.referrer});
     }
