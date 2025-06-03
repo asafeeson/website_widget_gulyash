@@ -3,6 +3,7 @@
     console.log({{Referrer}});
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
     var referrerHostname = new URL({{Referrer}}).hostname;
+    var pageUrlUtmCampaign = new URL({{Page URL}}).searchParams.get('utm_campaign');
     var activeWidgetData;
     // --- Вспомогательные функции ---
 
@@ -60,7 +61,7 @@
       }
 
       if (slideData.promocode) {
-        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "code": slideData.promocode}]) );
+        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, utm: , "code": slideData.promocode}]) );
         localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
         updateFloatingButtonName(slideData.promocode);
       }
