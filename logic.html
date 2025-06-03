@@ -1,7 +1,10 @@
 <script>
   // Глобальные переменные
   var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
-  var referrerHostname = new URL({{Referrer}}).hostname;
+  var referrerHostname;
+  if ({{Referrer}}) {
+    referrerHostname = new URL({{Referrer}}).hostname;
+  }
   var pageUrlUtmCampaign = new URL({{Page URL}}).searchParams.get('utm_campaign');
   var activeWidgetData;
 
@@ -382,9 +385,38 @@
       return true;
   };
 
+  function cleanOldStorage() {
+    var userHasPromocode = localStorage.getItem('userHasPromocode');
+    if (userHasPromocode) {
+      localStorage.removeItem('userHasPromocode');
+    }
+    // для обновления старой логики, проверяем тип значения, если boolean удаляем ключ
+    var firstVisit = localStorage.getItem('firstVisit');
+    if (typeof firstVisit === "boolean") {
+      localStorage.removeItem('firstVisit');
+      firstVisit = null;
+    }
+  }
+
+  function checkFirstVisitParams() {
+    cleanOldStorage();
+    var firstVisit = JSON.parse(localStorage.getItem('firstVisit'));
+    if (!firstVisit) {
+      return true;
+    }
+    // сравнить ref в сохраненных параметрах
+    // если ref совпадает с текущим рефералом из JSON, выдаем false
+    // если ref не совпадает с рефералом из JSON, выдаем true
+    var isFirstVisit = firstVisit.find(function(item){return item.referrer === activeWidgetData.referrer});
+    if (!isFirstVisit) {
+      firstVisit.push({referrer: activeWidgetData.referrer});
+    }
+    return !!isFirstVisit;
+  }
+
   // проверка referrer переед инициализацией виджета
-  if (!localStorage.getItem('firstVisit')) {
-      localStorage.setItem('firstVisit', 'true');
+  if (checkFirstVisitParams()) {
+      localStorage.setItem('firstVisit', JSON.stringify([{referrer: referrerHostname}]));
       dataLayer.push({ 'event': 'first_visit' });
       console.info('Пользователь первый раз, показываем виджет.');
       if ({{Referrer}}) {
