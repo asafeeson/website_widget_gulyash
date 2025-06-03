@@ -367,13 +367,13 @@
     };
 
     function initWidgetByReferrer(referrerUrl, widgetData){
-        var widgetData = getDataByReferrer(widgetData, referrerUrl);
-        if (!widgetData) {
+        var widgetDataRef = getDataByReferrer(widgetData, referrerUrl);
+        if (!widgetDataRef) {
             console.warn('Данные по рефу не найдены');
             return false;
         }
-        activeWidgetData = widgetData;
-        initWidget(widgetData);
+        activeWidgetData = widgetDataRef;
+        initWidget(widgetDataRef);
         return true;
     };
 
@@ -384,16 +384,16 @@
           console.info('UTM разметка utm_campaign отсутствует в адресе страницы.');
           return false;
         }
-        var widgetData = getDataByUtmCampaign(widgetData, {{Page URL}});
-        if ( !widgetDataByUtm ) {
+        var widgetDataUtm = getDataByUtmCampaign(widgetData, {{Page URL}});
+        if ( !widgetDataUtm ) {
             console.error("Данные по utm_campaign не найдены.");
             return false;
         }
-        activeWidgetData = widgetData;
+        activeWidgetData = widgetDataUtm;
         var utmCampaign = url.searchParams.get('utm_campaign');
         console.log('Получение данных по utm_campaign');
 
-        initWidget(widgetData);
+        initWidget(widgetDataUtm);
         return true;
     };
 
