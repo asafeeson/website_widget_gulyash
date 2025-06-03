@@ -2,6 +2,7 @@
     // Глобальные данные из переменной GTM
     console.log({{Referrer}});
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
+    var referrerHostname = new URL({{Referrer}}).hostname;
     var activeWidgetData;
     // --- Вспомогательные функции ---
 
