@@ -1,11 +1,9 @@
 <script>
-    // Глобальные данные из переменной GTM
-    console.log({{Referrer}});
+    // Глобальные переменные
     var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
     var referrerHostname = new URL({{Referrer}}).hostname;
     var pageUrlUtmCampaign = new URL({{Page URL}}).searchParams.get('utm_campaign');
     var activeWidgetData;
-    // --- Вспомогательные функции ---
 
     /**
      * Находит плавающую кнопку и обновляет текст.
