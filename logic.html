@@ -1,480 +1,438 @@
 <script>
-  if (!localStorage.getItem('firstVisit')) {
-    localStorage.setItem('firstVisit', 'true');
-    dataLayer.push({ 'event': 'first_visit' });
-  }
+    // Глобальные данные из переменной GTM
+    console.log({{Referrer}});
+    var widgetData = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
+    var activeWidgetData;
+    // --- Вспомогательные функции ---
 
-  // Глобальные данные из переменной GTM
-  var widgetDataArray = [{{widgetDataSushi}}, {{widgetDataPizza}}, {{widgetDebugData}}];
-  var listPizzaSlugs = {{List of Pizza URL Slugs}}
-  var listSushiSlugs = {{List of Sushi URL Slugs}}
-  var referrerHostname = {{Referrer}} ? new URL({{Referrer}}).hostname : '';
-  var widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, location.pathname);
-  console.log('widgetDataGlobal parameters:', widgetDataArray, {{Referrer}}, location.pathname);
-  console.log('widgetDataGlobal:', widgetDataGlobal)
+    /**
+     * Находит плавающую кнопку и обновляет текст.
+     */
+    function updateFloatingButtonName(promocode) {
+      var floatingButton = document.getElementById("promo-floating-button");
+      floatingButton.textContent = "🎁 Промокод: " + promocode;
+    }
 
-  // --- Вспомогательные функции ---
+    /**
+     * Создает и добавляет слайд в область контента виджета.
+     * @param {object} slideData - Данные для контента слайда.
+     */
+    function createSlide(slideData) {
+      console.info('Начинаю создание слайда', slideData);
+      var widgetContent = document.getElementById("widget-content");
+      if (!widgetContent) {
+        console.error("Element with id 'widget-content' not found.");
+        return; // Предотвращаем дальнейшее выполнение функции, если элемента нет
+      }
 
-  /**
-   * Находит плавающую кнопку и обновляет текст.
-   */
-  function updateFloatingButtonName() {
-    var floatingButton = document.getElementById("promo-floating-button");
-    var promocodes = JSON.parse(localStorage.getItem('promocodeValue')); // is an array of objects with key 'code'
-    if (floatingButton) {
-      var promocode = '';
-      if (promocodes && Array.isArray(promocodes) && promocodes.length > 0) {
-        if (promocodes.length === 1) {
-          promocode = promocodes[0].code;
+      var slide = document.createElement("div");
+      slide.id = "modal-widget-slide-start";
+      slide.style.animation = "slideInRight 0.5s ease-out";
+
+      var title = document.createElement("h3");
+      title.textContent = slideData.title;
+      slide.appendChild(title);
+
+      var body = document.createElement("p");
+      body.innerHTML = slideData.body;
+      slide.appendChild(body);
+
+      if (slideData.image) {
+        var imageWrapper = document.createElement("div");
+        imageWrapper.style.display = "flex";
+        imageWrapper.style.justifyContent = "center";
+        imageWrapper.style.alignItems = "center";
+        slide.appendChild(imageWrapper);
+        var image = document.createElement("img");
+        image.className = "modal-widget-image";
+        image.src = slideData.image;
+        image.alt = "";
+        imageWrapper.appendChild(image);
+      }
+
+      if (slideData.promocode) {
+        var promoCodeElement = document.createElement("p");
+        promoCodeElement.className = "promocode-value";
+        promoCodeElement.id = "promocode-value";
+        promoCodeElement.textContent = slideData.promocode;
+        slide.appendChild(promoCodeElement);
+      }
+
+      if (slideData.promocode) {
+        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "code": slideData.promocode}]) );
+        localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "hascode": true}]));
+        updateFloatingButtonName(slideData.promocode);
+      }
+
+      if (slideData.caption) {
+        var caption = document.createElement("p");
+        caption.textContent = slideData.caption;
+        slide.appendChild(caption);
+      }
+
+      var buttonGroup = document.createElement("div");
+      buttonGroup.className = "modal-widget-button-group";
+
+      if (slideData && slideData.buttonPrimary) {
+        var primaryButton = document.createElement("button");
+        primaryButton.type = "button";
+        primaryButton.id = "modal-btn-goto-next-slide";
+        primaryButton.className = "modal-widget-button-primary";
+        primaryButton.textContent = slideData.buttonPrimary;
+
+        if (slideData && slideData.promocode) {
+          primaryButton.onclick = copyToClipboard;
         } else {
-          promocode = promocodes.map(function(item) { return item.code; }).join(' | ');
+          primaryButton.onclick = handleNextSlideBtnClick;
         }
-        floatingButton.textContent = "🎁 Промокод: " + promocode;
-      }
-    }
-  }
 
-  /**
-   * Создает и добавляет слайд в область контента виджета.
-   * @param {object} slideData - Данные для контента слайда.
-   */
-  function createSlide(slideData) {
-    // console.info('Начинаю создание слайда', slideData);
-    var widgetContent = document.getElementById("widget-content");
-    if (!widgetContent) {
-      console.error("Element with id 'widget-content' not found.");
-      return; // Предотвращаем дальнейшее выполнение функции, если элемента нет
-    }
+        if (slideData && slideData.buttonPrimaryAction === "close") {
+          primaryButton.onclick = closeModal;
+        }
 
-    var slide = document.createElement("div");
-    slide.id = "modal-widget-slide-start";
-    slide.style.animation = "slideInRight 0.5s ease-out";
-
-    var title = document.createElement("h3");
-    title.textContent = slideData.title;
-    slide.appendChild(title);
-
-    var body = document.createElement("p");
-    body.innerHTML = slideData.body;
-    slide.appendChild(body);
-
-    if (slideData.image) {
-      var imageWrapper = document.createElement("div");
-      imageWrapper.style.display = "flex";
-      imageWrapper.style.justifyContent = "center";
-      imageWrapper.style.alignItems = "center";
-      slide.appendChild(imageWrapper);
-      var image = document.createElement("img");
-      image.className = "modal-widget-image";
-      image.src = slideData.image;
-      image.alt = "";
-      imageWrapper.appendChild(image);
-    }
-
-    if (slideData.promocode) {
-      var promocodeTitle = document.createElement('h4');
-      promocodeTitle.className = 'promocode-title';
-      promocodeTitle.textContent = 'ПРОМОКОД';
-      slide.appendChild(promocodeTitle);
-      var promoCodeElement = document.createElement("p");
-      promoCodeElement.className = "promocode-value";
-      promoCodeElement.id = "promocode-value";
-      promoCodeElement.textContent = slideData.promocode;
-      slide.appendChild(promoCodeElement);
-    }
-
-    if (slideData.promocode) {
-      var promocodeValue = JSON.parse(localStorage.getItem('promocodeValue'));
-      var codeInSildeData = null;
-      if (promocodeValue) {
-        codeInSildeData = promocodeValue.find(function(item) {return item.code === slideData.promocode});
-      }
-      console.log("codeInSildeData", codeInSildeData);
-      if (promocodeValue && codeInSildeData == null) {
-        var newValue = {"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode};
-        promocodeValue.push(newValue);
-        console.log("Добавляю в новое значение к хранилишу промокода:", newValue);
-        localStorage.setItem("promocodeValue", JSON.stringify(promocodeValue));
-      } else {
-        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode}]) );
-      }
-      localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "hascode": true}]));
-      updateFloatingButtonName(slideData.promocode);
-    }
-
-    if (slideData.caption) {
-      var caption = document.createElement("p");
-      caption.textContent = slideData.caption;
-      slide.appendChild(caption);
-    }
-
-    var buttonGroup = document.createElement("div");
-    buttonGroup.className = "modal-widget-button-group";
-
-    if (slideData && slideData.buttonPrimary) {
-      var primaryButton = document.createElement("button");
-      primaryButton.type = "button";
-      primaryButton.id = "modal-btn-goto-next-slide";
-      primaryButton.className = "modal-widget-button-primary";
-      primaryButton.textContent = slideData.buttonPrimary;
-
-      if (slideData && slideData.promocode) {
-        primaryButton.onclick = copyToClipboard;
-      } else {
-        primaryButton.onclick = handleNextSlideBtnClick;
+        primaryButton.setAttribute("data-next-slide", slideData.nextSlide);
+        buttonGroup.appendChild(primaryButton);
       }
 
-      if (slideData && slideData.buttonPrimaryAction === "close") {
-        primaryButton.onclick = closeModal;
+      if (slideData && slideData.buttonSecondary) {
+        var secondaryButton = document.createElement("button");
+        secondaryButton.type = "button";
+        secondaryButton.id = "modal-btn-no-thank-you";
+        secondaryButton.className = "modal-widget-button-secondary";
+        secondaryButton.textContent = slideData.buttonSecondary;
+        secondaryButton.onclick = closeModal;
+        buttonGroup.appendChild(secondaryButton);
       }
 
-      primaryButton.setAttribute("data-next-slide", slideData.nextSlide);
-      buttonGroup.appendChild(primaryButton);
+      slide.appendChild(buttonGroup);
+      widgetContent.innerHTML = "";
+      widgetContent.appendChild(slide);
     }
 
-    if (slideData && slideData.buttonSecondary) {
-      var secondaryButton = document.createElement("button");
-      secondaryButton.type = "button";
-      secondaryButton.id = "modal-btn-no-thank-you";
-      secondaryButton.className = "modal-widget-button-secondary";
-      secondaryButton.textContent = slideData.buttonSecondary;
-      secondaryButton.onclick = closeModal;
-      buttonGroup.appendChild(secondaryButton);
-    }
+    /**
+     * Отображает всплывающее сообщение.
+     * @param {string} message - Сообщение для отображения.
+     */
+    function showToast(message) {
+      var toast = document.createElement("div");
+      toast.textContent = message;
+      toast.style.position = "fixed";
+      toast.style.bottom = "20px";
+      toast.style.right = "20px";
+      toast.style.backgroundColor = "#4caf50";
+      toast.style.color = "#ffffff";
+      toast.style.padding = "10px 20px";
+      toast.style.borderRadius = "5px";
+      toast.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+      toast.style.zIndex = "1000";
+      document.body.appendChild(toast);
 
-    slide.appendChild(buttonGroup);
-    widgetContent.innerHTML = "";
-    widgetContent.appendChild(slide);
-  }
-
-  /**
-   * Отображает всплывающее сообщение.
-   * @param {string} message - Сообщение для отображения.
-   */
-  function showToast(message) {
-    var toast = document.createElement("div");
-    toast.textContent = message;
-    toast.style.position = "fixed";
-    toast.style.bottom = "20px";
-    toast.style.right = "20px";
-    toast.style.backgroundColor = "#4caf50";
-    toast.style.color = "#ffffff";
-    toast.style.padding = "10px 20px";
-    toast.style.borderRadius = "5px";
-    toast.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
-    toast.style.zIndex = "1000";
-    document.body.appendChild(toast);
-
-    setTimeout(function () {
-      toast.style.opacity = "0";
-      toast.style.transition = "opacity 0.5s";
       setTimeout(function () {
-        if (document.body.contains(toast)) {
-          document.body.removeChild(toast);
-        }
-      }, 500);
-    }, 3000);
-  }
-
-  // --- Обработчики событий ---
-
-  /**
-   * Обрабатывает событие клика кнопки закрытия.
-   */
-  function closeModal() {
-    var modalOverlay = document.getElementById("modal-widget-overlay");
-    var floatingButton = document.getElementById("modal-widget-floating-button");
-
-    modalOverlay && (modalOverlay.style.display = "none");
-    floatingButton && (floatingButton.style.display = "block");
-    console.warn("Сработала функция закрытия модалки closeModal");
-  }
-
-  /**
-   * Обрабатывает событие клика плавающей кнопки.
-   */
-  function handleFloatingBtnClick() {
-    var modalOverlay = document.getElementById("modal-widget-overlay");
-    var floatingButton = document.getElementById("modal-widget-floating-button");
-
-    modalOverlay && (modalOverlay.style.display = "block");
-    floatingButton && (floatingButton.style.display = "none");
-
-    if (!widgetDataGlobal) {
-        widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, location.pathname);
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.5s";
+        setTimeout(function () {
+          if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+          }
+        }, 500);
+      }, 3000);
     }
-    var storageData = JSON.parse(localStorage.getItem("promocodeValue"));
-    console.log('storageData', storageData)
-    var userHasPromocode = null;
-    if (storageData) {
-      userHasPromocode = !!storageData.find(function(item){return item.code === widgetDataGlobal.promocode});
-      console.log('handleFloatingBtnClick > userHasPromocode', storageData.find(function(item){return item.code === widgetDataGlobal.promocode}), widgetDataGlobal.promocode)
-    }
-    var slideKey;
-    // if (storageData && storageData.ref === referrerHostname && userHasPromocode) {
-    if (storageData && userHasPromocode) {
-      slideKey = Object.keys(widgetDataGlobal).pop(); // get last slide key from object
-    } else {
-      slideKey = 'slideOne';
-    }
-    console.log('slideKey', slideKey);
-    createSlide(widgetDataGlobal[slideKey]);
-  }
 
-  /**
-   * Обрабатывает событие клика кнопки "следующий слайд".
-   */
-  function handleNextSlideBtnClick() {
-    var nextSlideKey = this.getAttribute("data-next-slide");
-    var hostname = location.pathname;
-    widgetDataGlobal = getWidgetData(widgetDataArray, {{Referrer}}, hostname);
-    console.log('handleNextSlideBtnClick.widgetDataGlobal', widgetDataGlobal )
-    if (nextSlideKey && widgetDataGlobal[nextSlideKey]) {
-      createSlide(widgetDataGlobal[nextSlideKey]);
-    }
-  }
+    // --- Обработчики событий ---
 
-  /**
-   * Обрабатывает копирование промокода в буфер обмена.
-   */
-  function copyToClipboard() {
-    var promoCodeElement = document.getElementById("promocode-value");
-    if (promoCodeElement) {
-      var promoCode =
-          promoCodeElement.textContent || promoCodeElement.value;
-      navigator.clipboard
-        .writeText(promoCode)
-        .then(function () {
-        showToast("Промокод скопирован в буфер обмена!");
-      })
-        .catch(function (err) {
-        console.error("Ошибка при копировании промокода: ", err);
-      });
+    /**
+     * Обрабатывает событие клика кнопки закрытия.
+     */
+    function closeModal() {
+      var modalOverlay = document.getElementById("modal-widget-overlay");
+      var floatingButton = document.getElementById("modal-widget-floating-button");
+
+      modalOverlay && (modalOverlay.style.display = "none");
+      floatingButton && (floatingButton.style.display = "block");
+      console.warn("Сработала функция закрытия модалки closeModal");
+    }
+
+    /**
+     * Обрабатывает событие клика плавающей кнопки.
+     */
+    function handleFloatingBtnClick() {
+      var modalOverlay = document.getElementById("modal-widget-overlay");
+      var floatingButton = document.getElementById("modal-widget-floating-button");
+
+      modalOverlay && (modalOverlay.style.display = "block");
+      floatingButton && (floatingButton.style.display = "none");
+
+      var storageData = JSON.parse(localStorage.getItem("userHasPromocode"));
+      var slideKey;
+      if (storageData && storageData.ref === referrerHostname && storageData.hascode) {
+        slideKey = Object.keys(activeWidgetData).pop(); // get last slide key from object
+      } else {
+        slideKey = 'slideOne';
+      }
+      console.log('slideKey', slideKey);
+      createSlide(activeWidgetData[slideKey]);
+    }
+
+    /**
+     * Обрабатывает событие клика кнопки "следующий слайд".
+     */
+    function handleNextSlideBtnClick() {
       var nextSlideKey = this.getAttribute("data-next-slide");
-      createSlide(widgetDataGlobal[nextSlideKey]);
-    } else {
-      console.error("Element with id='promocode-value' not found.");
+      if (nextSlideKey && activeWidgetData[nextSlideKey]) {
+        createSlide(activeWidgetData[nextSlideKey]);
+      }
     }
-  }
 
-  /**
-    * Обрабатывает клики за пределами модального окна для его закрытия.
-    */
-  function handleOutsideModalClick(event) {
-    var modalOverlay = document.getElementById("modal-widget-overlay");
-    var modalWindow = document.getElementById("modal-widget-modal-window");
-    var floatingButton = document.getElementById("modal-widget-floating-button");
+    /**
+     * Обрабатывает копирование промокода в буфер обмена.
+     */
+    function copyToClipboard() {
+      var promoCodeElement = document.getElementById("promocode-value");
+      if (promoCodeElement) {
+        var promoCode =
+            promoCodeElement.textContent || promoCodeElement.value;
+        navigator.clipboard
+          .writeText(promoCode)
+          .then(function () {
+          showToast("Промокод скопирован в буфер обмена!");
+        })
+          .catch(function (err) {
+          console.error("Ошибка при копировании промокода: ", err);
+        });
+        var nextSlideKey = this.getAttribute("data-next-slide");
+        createSlide(activeWidgetData[nextSlideKey]);
+      } else {
+        console.error("Element with id='promocode-value' not found.");
+      }
+    }
 
-    if (
-      modalOverlay &&
-      modalWindow &&
-      getComputedStyle(modalOverlay).display === "block" &&
-      !modalWindow.contains(event.target) &&
-      !event.target.closest("#promo-floating-button") &&
-      !event.target.closest("#modal-widget-modal-window") &&
-      !event.target.closest(".modal-widget-button-group")
-    ) {
-      modalOverlay.style.display = "none";
+    /**
+      * Обрабатывает клики за пределами модального окна для его закрытия.
+      */
+    function handleOutsideModalClick(event) {
+      var modalOverlay = document.getElementById("modal-widget-overlay");
+      var modalWindow = document.getElementById("modal-widget-modal-window");
+      var floatingButton = document.getElementById("modal-widget-floating-button");
+
+      if (
+        modalOverlay &&
+        modalWindow &&
+        getComputedStyle(modalOverlay).display === "block" &&
+        !modalWindow.contains(event.target) &&
+        !event.target.closest("#promo-floating-button") &&
+        !event.target.closest("#modal-widget-modal-window") &&
+        !event.target.closest(".modal-widget-button-group")
+      ) {
+        modalOverlay.style.display = "none";
+        if (floatingButton) {
+          floatingButton.style.display = "block";
+        }
+        console.warn("Сработала функция закрытиия модалки при клике вне модалки");
+      }
+    }
+
+    // --- Инициализация ---
+
+  //   function checkAllowedReferrer(referrerUrl, widgetDataArray) {
+  //     if (!referrerUrl) {
+  //         console.warn('Нет URL источника перехода.');
+  //         return false;
+  //     }
+
+  //     var allowedHosts = {WidgetAllowedHosts};
+  //     var hostname = new URL(referrerUrl).hostname;
+  //     var referrerHostFound = allowedHosts.includes(hostname);
+
+
+  //     return referrerHostFound;
+  //   }
+
+    function getDataByReferrer(widgetDataArray, referrerUrl) {
+      var hostname = new URL(referrerUrl).hostname;
+      var data = widgetDataArray.find(function(item) {
+        return item.referrer === hostname;
+      });
+      if (!data) {
+          console.warn("JSON настройки виджета не найдены по referrer: ", hostname);
+          return null;
+      }
+      return data;
+    }
+
+    function initWidget(slidesData) {
+      console.warn("Инициализация виджета...");
+      // Привязываем обработчики событий к элементам, только если реферер разрешен и элементы существуют.
+      var modalCloseBtn = document.getElementById("modal-widget-close");
+      var floatingButton = document.getElementById("modal-widget-floating-button");
+      var modalWindow = document.getElementById("modal-widget-overlay");
+
+      if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", closeModal);
+      } else {
+        console.warn("Элемент id 'modal-widget-close' не найден. Кнока закрытия модального окна не будет работать.");
+      }
       if (floatingButton) {
-        floatingButton.style.display = "block";
+        floatingButton.addEventListener("click", handleFloatingBtnClick);
+      } else {
+        console.warn("Элемент id 'modal-widget-floating-button' не найден. Плавающая кнопка не будет работать.");
       }
-      console.warn("Сработала функция закрытиия модалки при клике вне модалки");
-    }
-  }
-
-  // --- Инициализация ---
-
-  function checkAllowedReferrer(referrer) {
-    var allowedHosts = {{Widget Allowed Hosts}};
-    var referrerHostFound = allowedHosts.includes(referrerHostname);
-    return referrerHostFound;
-  }
-
-  // get widget data helpers
-  function getDataByReferrer(dataArray, referrer) {
-    var referrerHostname = new URL(referrer).hostname;
-    if (referrerHostname) {
-      return dataArray.find(function(item) {
-            return item.referrer === referrerHostname;
-          });
-    }
-    return null;
-  }
-
-  function getDataByHostname(hostname) {
-    if ( listPizzaSlugs.includes(hostname) ) {
-      console.log("Совпало по списку пицца. Инциирую виджет Пицца.");
-      if ( widgetDataGlobal !== {{widgetDataPizza}} ) {
-        return {{widgetDataPizza}};
+      if (modalWindow) {
+        modalWindow.addEventListener("click", handleOutsideModalClick);
       }
-    } else if ( listSushiSlugs.includes(hostname)) {
-      console.log("Совпало по списку суши. Инциирую виджет Суши.");
-      if ( widgetDataGlobal !== {{widgetDataSushi}} ) {
-        return {{widgetDataSushi}};
+
+      // Отображаем модальное окно и прячем плавающую кнопку
+      modalWindow && (modalWindow.style.display = "block");
+      floatingButton && (floatingButton.style.display = "none");
+
+      // Проверяем наличие промокода
+      var userHasPromocode = JSON.parse(localStorage.getItem("userHasPromocode")),
+          promoButton = document.getElementById("promo-floating-button"),
+          slideKey;
+      if (userHasPromocode && promoButton && userHasPromocode.ref === referrerHostname) {
+        var promocodeValue = JSON.parse(localStorage.getItem("promocodeValue"));
+        promoButton.textContent = "🎁 Промокод: " + promocodeValue.code;
+        slideKey = Object.keys(slidesData).pop();
+      } else {
+        slideKey = 'slideOne';
+      }
+      createSlide(slidesData[slideKey]);
+    }
+
+    // изменяем положение кнопки, если url содержит product
+    function updateFloatingButtonPosition() {
+      var button = document.getElementById('modal-widget-floating-button');
+      if (!button) return;
+
+      button.style.position = 'fixed';
+
+      if (window.location.href.includes('product')) {
+        button.style.top = '20px';
+        button.style.left = '20px';
+        button.style.bottom = '';
+        button.style.right = '';
+      } else {
+        button.style.bottom = '45px';
+        button.style.right = '20px';
+        button.style.top = '';
+        button.style.left = '';
       }
     }
-    return null;
-  }
 
-  function getWidgetData(data, referrer, hostname) {
-    if (referrer) {
-      console.info('Реферер есть, ищем данные по нему.')
-      console.info({data: data, referrer: referrer, hostname: hostname})
-      var widgetData = getDataByReferrer(data, referrer);
-    }
-    if (widgetData === null || hostname) {
-      console.info('Рефрер пустой или не совпал со списком разрешенных, ищем данные по hostname.')
-      console.info({data: data, referrer: referrer, hostname: hostname})
-      return getDataByHostname(hostname);
-    }
-  }
-
-  // get widget data helpers /
-
-  function initWidget(slidesData) {
-    console.warn("Инициализация виджета...");
-    // Привязываем обработчики событий к элементам, только если реферер разрешен и элементы существуют.
-    var modalCloseBtn = document.getElementById("modal-widget-close");
-    var floatingButton = document.getElementById("modal-widget-floating-button");
-    var modalWindow = document.getElementById("modal-widget-overlay");
-
-    if (modalCloseBtn) {
-      modalCloseBtn.addEventListener("click", closeModal);
-    } else {
-      console.warn("Элемент id 'modal-widget-close' не найден. Кнока закрытия модального окна не будет работать.");
-    }
-    if (floatingButton) {
-      floatingButton.addEventListener("click", handleFloatingBtnClick);
-    } else {
-      console.warn("Элемент id 'modal-widget-floating-button' не найден. Плавающая кнопка не будет работать.");
-    }
-    if (modalWindow) {
-      modalWindow.addEventListener("click", handleOutsideModalClick);
+    /**
+     * Возвращает объект из массива данных, соответствующий заданной utm-кампании.
+     *
+     * @param {Array<Object>} dataArray - Массив объектов с настройками виджета, каждый из которых содержит utm-данные.
+     * @param {string} campaign - Значение utm_campaign для поиска.
+     * @returns {Object|null} Найденный объект с соответствующим utm_campaign или null, если не найдено или параметры не указаны.
+     */
+    function getDataByUtmCampaign(dataArray, pageUrl) {
+        if (!dataArray) {
+            console.error("Не указан список настроек виджета для поиска по UTM");
+            return null;
+        }
+        var urlUtmCampaignValue = new URL(pageUrl).searchParams.get('utm_campaign');
+        return dataArray.find(function (item) {
+            return item.utm.campaign === urlUtmCampaignValue;
+        })
     }
 
-    // Отображаем модальное окно и прячем плавающую кнопку
-    modalWindow && (modalWindow.style.display = "block");
-    floatingButton && (floatingButton.style.display = "none");
-
-    // Проверяем наличие промокода
-    var storageData = JSON.parse(localStorage.getItem("promocodeValue"));
-    // var promoButton = document.getElementById("promo-floating-button");
-    var slideKey;
-    
-    updateFloatingButtonName();
-
-    var userHasPromocode = null;
-    if (storageData) {
-      userHasPromocode = !!storageData.find(function(item){return item.code === slidesData.promocode});
-      console.log('initWidget > userHasPromocode', storageData.find(function(item){return item.code === slidesData.promocode}), slidesData.promocode)
-    }
-    if (storageData && userHasPromocode) {
-      slideKey = Object.keys(slidesData).pop(); // get last slide key from object
-    } else {
-      slideKey = 'slideOne';
+    /**
+     * Проверяет, содержит ли переданный URL параметр utm_campaign с заданным значением. И возвращает его значение.
+     *
+     * @param {string} url - URL-адрес для проверки.
+     * @param {string} campaign - Значение utm_campaign, которое требуется найти.
+     * @returns {boolean} Возвращает true, если utm_campaign совпадает с campaign, иначе false.
+     */
+    function hasUtmCampaign(url) {
+        try {
+            var urlObj = new URL(url);
+            console.warn('urlObj.searchParams.has(utm_campaign): ', urlObj.searchParams.has('utm_campaign'))
+            return urlObj.searchParams.has('utm_campaign');
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     }
 
-    createSlide(slidesData[slideKey]);
-  }
-
-  // изменяем положение кнопки, если url содержит product
-  function updateFloatingButtonPosition() {
-    var button = document.getElementById('modal-widget-floating-button');
-    if (!button) return;
-
-    button.style.position = 'fixed';
-
-    if (window.location.href.includes('product')) {
-      button.style.top = '20px';
-      button.style.left = '20px';
-      button.style.bottom = '';
-      button.style.right = '';
-    } else {
-      button.style.bottom = '45px';
-      button.style.right = '20px';
-      button.style.top = '';
-      button.style.left = '';
-    }
-  }
-
-  // Хак для перехвата pushState и replaceState
-  var wrapHistoryMethod = function(type) {
-    var orig = history[type];
-    history[type] = function() {
-      var result = orig.apply(this, arguments);
-      var event = document.createEvent('Event');
-      event.initEvent('locationchange', true, true);
-      window.dispatchEvent(event);
-      return result;
-    };
-  };
-
-  var reinitWidget = function() {
-    console.log('Ре-инициализация виджета по событию:', 'изменился location в истории');
-    var promocode = JSON.parse(localStorage.getItem('promocodeValue'));
-    if ( listPizzaSlugs.includes(location.pathname) ) {
-      console.log("Совпало по списку пицца. Провреяю наличие промокода у пользователя.");
-      var initData = {{widgetDataPizza}};
-      var codeInInitData = null;
-      if (promocode) {
-         codeInInitData = promocode.find(function(item) {return item.code === initData.promocode});
+    // Хак для перехвата pushState и replaceState
+    var wrapHistoryMethod = function(type) {
+      var orig = history[type];
+      history[type] = function() {
+        var result = orig.apply(this, arguments);
+        var event = document.createEvent('Event');
+        event.initEvent('locationchange', true, true);
+        window.dispatchEvent(event);
+        return result;
       };
-      if (promocode && codeInInitData) {
-        console.log("Промокод есть и совпадает с виджетом", codeInInitData);
-        return;
+    };
+
+    function initWidgetByReferrer(referrerUrl, widgetData){
+        var widgetData = getDataByReferrer(widgetData, referrerUrl);
+        if (!widgetData) {
+            console.warn('Данные по рефу не найдены');
+            return false;
+        }
+        activeWidgetData = widgetData;
+        initWidget(widgetData);
+        return true;
+    };
+
+    function initWidgetByUtm(pageUrl, widgetData){
+        var url = new URL(pageUrl);
+        var urlHasUtmCampaign = url.searchParams.has('utm_campaign');
+        if (!urlHasUtmCampaign) {
+          console.info('UTM разметка utm_campaign отсутствует в адресе страницы.');
+          return false;
+        }
+        var widgetData = getDataByUtmCampaign(widgetData, {{Page URL}});
+        if ( !widgetDataByUtm ) {
+            console.error("Данные по utm_campaign не найдены.");
+            return false;
+        }
+        activeWidgetData = widgetData;
+        var utmCampaign = url.searchParams.get('utm_campaign');
+        console.log('Получение данных по utm_campaign');
+
+        initWidget(widgetData);
+        return true;
+    };
+
+    // проверка referrer переед инициализацией виджета
+    if ({{Referrer}}) {
+      console.info("Источник перехода пользователя:", {{Referrer}});
+      var isInitiatedByRef = initWidgetByReferrer({{Referrer}}, widgetData);
+      if (!isInitiatedByRef) {
+          console.info('Не удалось инициировать виджет по Referrer.');
+          console.info('Пробую инициировать виджет по UTM.');
+          var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
+          if (!isInitiatedByUtm) {
+              console.info('Не удалось инициировать виджет по UTM.');
+          } else {
+              console.info('Виджет инциирован по UTM.');
+          }
+      } else {
+          console.info('Виджет инициирован по Referrer.');
       }
-      console.log("Промокод не совпрадает с виджетом, создаю виджет.", initData.promocode, promocode);
-      initWidget(initData);
-    } else if ( listSushiSlugs.includes(location.pathname)) {
-      console.log("Совпало по списку суши. Инциирую виджет Суши.");
-      var initData = {{widgetDataSushi}};
-      var codeInInitData = null;
-      if (promocode) {
-        codeInInitData = promocode.find(function(item) {return item.code === initData.promocode});
-      }
-      if (promocode && codeInInitData) {
-        console.log("Промокод есть и совпадает с виджетом", codeInInitData);
-        return;
-      }
-      console.log("Промокод не совпрадает с виджетом, создаю виджет.", initData.promocode, promocode);
-      initWidget(initData);
-    }
-  }
-
-  wrapHistoryMethod('pushState');
-  wrapHistoryMethod('replaceState');
-
-  // Слушаем все возможные изменения адреса
-  window.addEventListener('popstate', updateFloatingButtonPosition);
-  window.addEventListener('locationchange', updateFloatingButtonPosition);
-  window.addEventListener('pushState', reinitWidget);
-  window.addEventListener('locationchange', reinitWidget);
-
-  // проверка referrer переед инициализацией виджета
-
-  // если пользователь первый раз, показывает виджет.
-  // если пользователь второй раз, ничего не показываем.
-
-
-  if ({{Referrer}}) {
-    console.info("Пользователь перешел с сайта", {{Referrer}});
-    if (checkAllowedReferrer({{Referrer}})) {
-      console.info("Реферер совпадал, продолжаю создание виджета.");
-      var widgetDataByReferrer = getDataByReferrer(widgetDataArray, {{Referrer}});
-      console.log('widgetDataByReferrer', widgetDataByReferrer);
-      if (!widgetDataByReferrer) {
-        throw Error('Данные для создания виджета не найдены.');
-      }
-      console.log('Получение данных по хосту:', widgetDataByReferrer);
-      initWidget(widgetDataGlobal);
+    } else if (hasUtmCampaign({{Page URL}})) {
+        var isInitiatedByUtm = initWidgetByUtm({{Page URL}}, widgetData);
+        if (!isInitiatedByUtm) {
+            console.info('Не удалось инициировать виджет по UTM.');
+        } else {
+            console.info('Виджет инциирован по UTM.');
+        }
     } else {
-      console.warn("Реферер пустой или не совпал со списком разрешенных.", {{Referrer}});
+        console.info('Не удалось инциировать виджет.');
     }
-  } else {
-    console.info("Нет источника перехода. Проверяем pathname:", location.pathname);
-    initWidget(widgetDataGlobal);
-  }
 
-  // Вызов при первом рендере
-  updateFloatingButtonPosition();
+
+
+    wrapHistoryMethod('pushState');
+    wrapHistoryMethod('replaceState');
+
+    // Слушаем все возможные изменения адреса
+    window.addEventListener('popstate', updateFloatingButtonPosition);
+    window.addEventListener('locationchange', updateFloatingButtonPosition);
+
+    // Вызов при первом рендере
+    updateFloatingButtonPosition();
 </script>
