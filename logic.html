@@ -71,14 +71,14 @@
     }
     console.log("codeInSildeData", codeInSildeData);
     if (promocodeValue && codeInSildeData == null) {
-        var newValue = {"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode};
+        var newValue = {"ref": referrerHostname, "utm": pageUrlUtmCampaign, "code": slideData.promocode};
         promocodeValue.push(newValue);
-        console.log("Добавляю в новое значение к хранилишу промокода:", newValue);
+        console.log("Добавляю в новое значение к хранилишу промокодов:", newValue);
         localStorage.setItem("promocodeValue", JSON.stringify(promocodeValue));
     } else {
-        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "code": slideData.promocode}]) );
+        localStorage.setItem("promocodeValue", JSON.stringify([{"ref": referrerHostname, "utm": pageUrlUtmCampaign, "code": slideData.promocode}]) );
     }
-    localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "path": location.pathname, "hascode": true}]));
+    // localStorage.setItem("userHasPromocode", JSON.stringify([{"ref": referrerHostname, "utm": pageUrlUtmCampaign, "hascode": true}]));
     updateFloatingButtonName(slideData.promocode);
     }
 
