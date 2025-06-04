@@ -251,6 +251,10 @@
   }
 
   function getDataByReferrer(widgetDataArray, referrerUrl) {
+    if (!referrerUrl) {
+      console.debug('Реферала нет', referrerUrl);
+      return null;
+    }
     var hostname = new URL(referrerUrl).hostname;
     var data = widgetDataArray.find(function(item) {
       return item.referrer === hostname;
@@ -332,6 +336,17 @@
       })
   }
 
+  function getDataByUtmSource(dataArray, pageUrl) {
+      if (!dataArray) {
+          console.error("Не указан список настроек виджета для поиска по UTM");
+          return null;
+      }
+      var urlUtmSourceValue = new URL(pageUrl).searchParams.get('utm_source');
+      return dataArray.find(function (item) {
+          return item.utm.source.includes(urlUtmSourceValue);
+      })
+  }
+
   function hasUtmCampaign(url) {
       try {
           var urlObj = new URL(url);
@@ -374,14 +389,14 @@
         return false;
       }
       var widgetDataUtm = getDataByUtmCampaign(widgetData, {{Page URL}});
-      if ( !widgetDataUtm ) {
+      if ( !widgetDataUtmCampaign ) {
           console.error("Данные по utm_campaign не найдены.");
           return false;
       }
-      activeWidgetData = widgetDataUtm;
+      activeWidgetData = widgetDataUtmCampaign;
       var utmCampaign = url.searchParams.get('utm_campaign');
       // console.log('Получение данных по utm_campaign');
-      initWidget(widgetDataUtm);
+      initWidget(widgetDataUtmCampaign);
       return true;
   };
 
@@ -392,36 +407,67 @@
     }
     // для обновления старой логики, проверяем тип значения, если boolean удаляем ключ
     var firstVisit = localStorage.getItem('firstVisit');
-    if (typeof firstVisit === "boolean") {
+    if (typeof(firstVisit) === "boolean") {
       localStorage.removeItem('firstVisit');
       firstVisit = null;
     }
   }
 
-  function checkFirstVisitParams() {
-    cleanOldStorage();
-    var firstVisit = JSON.parse(localStorage.getItem('firstVisit'));
-    if (!firstVisit) {
+  function widgetViewRulesLogic() {
+    // если пользователь с лендинга, всегда показывать
+    // если пользователь из бизнес-рекламы яндекса, один раз показывать
+    // если пользователь из рекламы поиска utm_campaign poisk_pizza, всегда показывать
+  }
+
+  function checkLocalStorageFirstVisit() {
+    // предварительно получаем данные для сверки
+    var widgetDataRef = getDataByReferrer(widgetData, {{Referrer}});
+    var widgetDataUtmCampaign = getDataByUtmCampaign(widgetData, {{Page URL}});
+    var widgetDataUtmSource = getDataByUtmSource(widgetData, {{Page URL}});
+    var widgetDataLocal;
+    if (widgetDataRef) {
+      // !!! если пользователь с лендинга, всегда показывать
+      console.log('Получаем данные по рефералу:', widgetDataLocal)
+      widgetDataLocal = widgetDataRef;
       return true;
     }
-    // сравнить ref в сохраненных параметрах
-    // если ref совпадает с текущим рефералом из JSON, выдаем false
-    // если ref не совпадает с рефералом из JSON, выдаем true
-    var isFirstVisit;
-    if (activeWidgetData) {
-      isFirstVisit = firstVisit.find(function(item){return item.referrer === activeWidgetData.referrer});
-      if (!isFirstVisit) {
-        firstVisit.push({referrer: activeWidgetData.referrer});
+    if (widgetDataUtmCampaign) {
+      widgetDataLocal = widgetDataUtmCampaign;
+      console.log('Получаем данные по utm_campaign:', widgetDataLocal)
+      return true;
+    }
+    if (widgetDataUtmSource) {
+      // если пользователь из бизнес-рекламы яндекса, один раз показывать
+      widgetDataLocal = widgetDataUtmSource;
+      console.log('Получаем данные по utm_source:', widgetDataLocal)
+    }
+    console.log('Начинаю проверку данных в хранилище')
+    var firstVisitStorage = JSON.parse(localStorage.getItem('first_visit'));
+    console.log('В хранилище найдено:', firstVisitStorage);
+    // если хранилище пустое создаем первую запись с id виджета
+    if (!firstVisitStorage && widgetDataLocal){
+      console.log('Первый визит. Сохраняем id в хранилище.')
+      localStorage.setItem('first_visit', JSON.stringify([widgetDataLocal.id]));
+      return true;
+    }
+    if (widgetDataLocal) {
+      var widgetIdInStorage = firstVisitStorage.includes(widgetDataLocal.id);
+      if (widgetIdInStorage) {
+        console.log('Id виджета найден в хранилище.');
+        return false;
+      } else {
+        console.log('Id виджета не найден в хранилище.');
+        firstVisitStorage.push(widgetDataLocal.id);
+        localStorage.setItem('first_visit', JSON.stringify(firstVisitStorage));
+        console.log('Добавлен новый Id в хранилище:', localStorage.getItem('firstVisit'))
+        return true;
       }
     }
-    return !!isFirstVisit;
+    return true;
   }
 
   // проверка referrer переед инициализацией виджета
-  if (checkFirstVisitParams()) {
-      localStorage.setItem('firstVisit', JSON.stringify([{referrer: referrerHostname}]));
-      dataLayer.push({ 'event': 'first_visit' });
-      console.info('Пользователь первый раз, показываем виджет.');
+  if (checkLocalStorageFirstVisit()) {
       if ({{Referrer}}) {
           console.info("Источник перехода пользователя:", {{Referrer}});
           var isInitiatedByRef = initWidgetByReferrer({{Referrer}}, widgetData);

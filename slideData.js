@@ -4,7 +4,7 @@ function() {
       referrer: "google.com",
       promocode: "ПРОМОКОД",
       slugs: ["slug1", "slug2"],
-      utm: {campaign: "pizza_sushi"},
+      utm: {source: ["geoadv_yabs", "geoadv_search_yabs", "geoadv_maps"], campaign: "pizza_sushi"},
       slideOne: {
         title: "Кажется, Вы у нас впервые!",
         body: "Хотим рассказать 3 факта о себе и подарить нежную и красивую <strong>Филадельфию от Шефа</strong>!",
